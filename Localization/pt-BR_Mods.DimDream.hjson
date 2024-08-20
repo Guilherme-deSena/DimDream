@@ -1,0 +1,9 @@
+Projectiles: {
+}
+
+NPCs.ChiyuriBoss.BossChecklistIntegration.SpawnInfo: Use um [i:DimDream/MiniatureHypervessel]
+
+Items: {
+	MiniatureHypervessel: {
+	}
+}

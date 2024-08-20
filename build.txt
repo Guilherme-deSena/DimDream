@@ -1,0 +1,3 @@
+displayName = Dimensional Dream
+author = Guilherme de Sena
+version = 0.1.0

@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34728.123
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DimDream", "DimDream.csproj", "{BCD1D96E-EC87-4B67-89D4-6CBE90D5F86F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExampleMod", "..\ExampleMod\ExampleMod.csproj", "{19CDCDF5-F618-435B-AFFD-1512C18B0763}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BCD1D96E-EC87-4B67-89D4-6CBE90D5F86F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BCD1D96E-EC87-4B67-89D4-6CBE90D5F86F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BCD1D96E-EC87-4B67-89D4-6CBE90D5F86F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BCD1D96E-EC87-4B67-89D4-6CBE90D5F86F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{19CDCDF5-F618-435B-AFFD-1512C18B0763}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{19CDCDF5-F618-435B-AFFD-1512C18B0763}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{19CDCDF5-F618-435B-AFFD-1512C18B0763}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{19CDCDF5-F618-435B-AFFD-1512C18B0763}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DFFA4F49-41BD-4FCA-A93C-4C217D63F551}
+	EndGlobalSection
+EndGlobal

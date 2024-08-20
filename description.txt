@@ -1,0 +1,2 @@
+Adds content from the Touhou Project series.
+As of version 0.1.0, the only thing this mod adds is the boss Chiyuri Kitashirakawa.

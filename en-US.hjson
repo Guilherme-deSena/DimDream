@@ -1,0 +1,19 @@
+Mods: {
+	DimDream: {
+		NPCs.ChiyuriBoss.DisplayName: Chiyuri Boss
+
+		Items: {
+			MiniatureHypervessel: {
+				DisplayName: Miniature Hypervessel
+				Tooltip: ""
+			}
+		}
+
+		Projectiles: {
+			BlueLaser.DisplayName: Blue Laser
+			BlueRing.DisplayName: Blue Ring
+			Familiar.DisplayName: Familiar
+			WhiteSpore.DisplayName: White Spore
+		}
+	}
+}

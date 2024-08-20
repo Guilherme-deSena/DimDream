@@ -1,0 +1,19 @@
+Mods: {
+	DimDream: {
+		NPCs.ChiyuriBoss.DisplayName: Chiyuri Kitashirakawa
+
+		Items: {
+			MiniatureHypervessel: {
+				DisplayName: Hipernavio em Miniatura
+				Tooltip: Invoca Chiyuri Kitashirakawa, Residente da Fantasia que Corre pelo Tempo
+			}
+		}
+
+		Projectiles: {
+			BlueLaser.DisplayName: Laser Azul
+			BlueRing.DisplayName: Anel Azul
+			Familiar.DisplayName: Familiar
+			WhiteSpore.DisplayName: Esporo
+		}
+	}
+}
