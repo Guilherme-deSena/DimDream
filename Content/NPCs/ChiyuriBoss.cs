@@ -22,10 +22,10 @@ namespace DimDream.Content.NPCs
         private int AnimationCount { get; set; } = 0;
 		private Vector2 CenterPosition { get; set; }
 		private Vector2 MoveOffset {
-			get => new Vector2(NPC.ai[1], NPC.ai[2]);
+			get => new Vector2(NPC.ai[2], NPC.ai[3]);
 			set {
-				NPC.ai[1] = value.X;
-				NPC.ai[2] = value.Y;
+				NPC.ai[2] = value.X;
+				NPC.ai[3] = value.Y;
 			}
 		}
 		private static Asset<Texture2D> MagicCircle { get; set; }
@@ -45,7 +45,7 @@ namespace DimDream.Content.NPCs
 				return 3;
 			}
         }
-        // This will be checked to prevent from starting a stage mid-pattern:
+        // This will be checked to prevent starting a stage mid-pattern:
         private bool[] TransitionedToStage { get; set; } = new bool[4]; 
         private int ProjDamage
 		{
@@ -61,8 +61,8 @@ namespace DimDream.Content.NPCs
             }
         }
 		private float Counter {
-			get => NPC.ai[3];
-			set => NPC.ai[3] = value;
+			get => NPC.localAI[3];
+			set => NPC.localAI[3] = value;
 		}
 
 		public void DiagonalAimedSpore(Player player) {
@@ -183,7 +183,7 @@ namespace DimDream.Content.NPCs
 		}
 
 		public void Stage0(Player player) {
-                if (Main.netMode != NetmodeID.MultiplayerClient) { // Only server should spawn bullets
+			if (Main.netMode != NetmodeID.MultiplayerClient) { // Only server should spawn bullets
 				int frameCount = Main.expertMode ? 20 : 30; // Cooldown between random spores
 				if (Counter % frameCount == 0)
 					TopRandomSpore();
@@ -283,7 +283,10 @@ namespace DimDream.Content.NPCs
 						CrossedSpores(crossedBullets, i);
 					}
 				}
-			}
+
+                if (Counter >= 405 && Counter % 15 == 0)
+                    BlueLaser();
+            }
 			if (Counter >= 500 || !TransitionedToStage[3])
 			{
 				Counter = 0;
@@ -294,7 +297,7 @@ namespace DimDream.Content.NPCs
 		public override void SetStaticDefaults() {
 			Main.npcFrameCount[Type] = 6;
 
-			// Add this in for bosses that have a summon item, requires corresponding code in the item (See MinionBossSummonItem.cs)
+			// Add this in for bosses that have a summon item, requires corresponding code in the item
 			NPCID.Sets.MPAllowedEnemies[Type] = true;
 			// Automatically group with other bosses
 			NPCID.Sets.BossBestiaryPriority.Add(Type);
@@ -314,16 +317,15 @@ namespace DimDream.Content.NPCs
 			NPC.knockBackResist = 0f;
 			NPC.noGravity = true;
 			NPC.noTileCollide = true;
-			NPC.DiscourageDespawn(5);
 			NPC.value = Item.buyPrice(gold: 5);
 			NPC.SpawnWithHigherTime(30);
 			NPC.boss = true;
 			NPC.npcSlots = 10f; // Take up open spawn slots, preventing random NPCs from spawning during the fight
 
-			// Custom AI, 0 is "bound town NPC" AI which slows the NPC down and changes sprite orientation towards the target
-			NPC.aiStyle = -1;
+            // Custom AI, 0 is "bound town NPC" AI which slows the NPC down and changes sprite orientation towards the target
+            NPC.aiStyle = -1;
 
-			// The following code assigns a music track to the boss in a simple way.
+			// Assigns a music track to the boss in a simple way
 			if (!Main.dedServ) {
 				Music = MusicID.Boss2;
 			}
@@ -366,10 +368,11 @@ namespace DimDream.Content.NPCs
 
 		public override void AI() {
 			// This should almost always be the first code in AI() as it is responsible for finding the proper player target
-			if (NPC.target < 0 || NPC.target == 255 || Main.player[NPC.target].dead || !Main.player[NPC.target].active)
+			Player player = Main.player[NPC.target];
+			if (NPC.target < 0 || NPC.target == 255 || player.dead || !player.active || Vector2.Distance(NPC.Center, player.Center) > 3000f)
 				NPC.TargetClosest();
 
-			Player player = Main.player[NPC.target];
+			player = Main.player[NPC.target];
 
             if (player.dead)
             {
@@ -437,46 +440,3 @@ namespace DimDream.Content.NPCs
 		}
 	}
 }
-
-
-/*if (Main.netMode != NetmodeID.MultiplayerClient) {
-	/*if (!moving && NPC.HasValidTarget && Counter > 300 && Counter % 3 == 0)
-	{ DiagonalAimedSpore(player); }
-
-	if (Counter % 30 == 0) {
-		for (int i = 0; i < Main.rand.Next(1, 3); i++) {
-			TopRandomSpore();
-		}
-	}
-
-	if (!moving && Counter % 120 == 0)
-	{ BlueRing(8); }
-
-	switch (Counter % 180) {
-		case 0:
-			CrossedSpores(12, 45);
-			break;
-		case 30:
-			CrossedSpores(12, 135);
-			CrossedSpores(12, 315);
-			break;
-		case 60:
-			CrossedSpores(12, 225);
-			break;
-		}
-
-	if (!moving) {
-		if (Counter % 240 <= 120 && Counter % 60 == 0) {
-			DiagonalAimedRingLine(player, 10, 1);
-			DiagonalAimedRingLine(player, 10, -1);
-		}
-	}
-
-	if (Counter % 480 == 0)
-		BlueLaser();
-
-	if (Counter >= 460 && Counter % 5 == 0)
-		PerpendicularSpores(Counter % 460 - 10);
-	else if (Counter >= 435 && Counter % 5 == 0)
-		PerpendicularSpores((Counter % 435 - 10) * -1);
-} */
