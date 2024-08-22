@@ -35,10 +35,10 @@ namespace DimDream.Content.Items.Consumables
 		}
 
 		public override bool CanUseItem(Player player) {
-			// If you decide to use the below UseItem code, you have to include !NPC.AnyNPCs(id), as this is also the check the server does when receiving MessageID.SpawnBoss.
-			// If you want more constraints for the summon item, combine them as boolean expressions:
-			//    return !Main.dayTime && !NPC.AnyNPCs(ModContent.NPCType<MinionBossBody>()); would mean "not daytime and no MinionBossBody currently alive"
-			return !NPC.AnyNPCs(ModContent.NPCType<ChiyuriBoss>());
+            // If you decide to use the below UseItem code, you have to include !NPC.AnyNPCs(id), as this is also the check the server does when receiving MessageID.SpawnBoss.
+            // If you want more constraints for the summon item, combine them as boolean expressions:
+            //    return !Main.dayTime && !NPC.AnyNPCs(ModContent.NPCType<ChiyuriBoss>()); would mean "not daytime and no ChiyuriBoss currently alive"
+            return !NPC.AnyNPCs(ModContent.NPCType<ChiyuriBoss>());
 		}
 
 		public override bool? UseItem(Player player) {
@@ -55,7 +55,7 @@ namespace DimDream.Content.Items.Consumables
 				}
 				else {
 					// If the player is in multiplayer, request a spawn
-					// This will only work if NPCID.Sets.MPAllowedEnemies[type] is true, which we set in MinionBossBody
+					// This will only work if NPCID.Sets.MPAllowedEnemies[type] is true, which is set in ChiyuriBoss
 					NetMessage.SendData(MessageID.SpawnBossUseLicenseStartEvent, number: player.whoAmI, number2: type);
 				}
 			}
@@ -63,11 +63,12 @@ namespace DimDream.Content.Items.Consumables
 			return true;
 		}
 
-		// Please see Content/ExampleRecipes.cs for a detailed explanation of recipe creation.
-		public override void AddRecipes() {
+        // ExampleMod contains a detailed explanation of recipe creation in Content/ExampleRecipes.cs
+        public override void AddRecipes() {
 			CreateRecipe()
 				.AddIngredient(ItemID.HallowedBar, 10)
-				.AddTile(TileID.Anvils)
+                .AddIngredient(ItemID.SoulofLight, 5)
+                .AddTile(TileID.Anvils)
 				.Register();
 		}
 	}

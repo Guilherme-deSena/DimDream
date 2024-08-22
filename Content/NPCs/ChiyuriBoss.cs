@@ -21,7 +21,7 @@ namespace DimDream.Content.NPCs
 	internal class ChiyuriBoss : ModNPC {
         private int AnimationCount { get; set; } = 0;
 		private Vector2 CenterPosition { get; set; }
-		private Vector2 MoveOffset {
+		private Vector2 Destination {
 			get => new Vector2(NPC.ai[2], NPC.ai[3]);
 			set {
 				NPC.ai[2] = value.X;
@@ -31,8 +31,8 @@ namespace DimDream.Content.NPCs
 		private static Asset<Texture2D> MagicCircle { get; set; }
 		private bool Moving { get => NPC.velocity.Length() >= 1; }
 		private float Pi { get => MathHelper.Pi; }
-		private int Stage {
-			get {
+		private int Stage { // Stage is decided by the boss' health percentage
+            get {
 				if (NPC.life > NPC.lifeMax * .80)
 					return 0;
 
@@ -65,18 +65,6 @@ namespace DimDream.Content.NPCs
 			set => NPC.localAI[3] = value;
 		}
 
-		public void DiagonalAimedSpore(Player player) {
-			int side = Counter % 2 == 0 ? 1 : -1;
-			Vector2 position = NPC.Top + new Vector2(500 * side + Main.rand.Next(-100, 100), Main.rand.Next(-250, -150));
-			Vector2 direction = (player.Center - position).SafeNormalize(Vector2.UnitY);
-
-			float speed = .7f;
-			int type = ModContent.ProjectileType<WhiteSpore>();
-			int damage = (int)(ProjDamage * .8);
-			var entitySource = NPC.GetSource_FromAI();
-
-			Projectile.NewProjectile(entitySource, position, direction * speed, type, damage, 0f, Main.myPlayer);
-		}
 
 		// bulletType is the type of projectile the familiar shoots. 0 for white spore, 1 for ring line.
 		// bulletCount is how many bullets each burst has (if the projectile uses bursts). Unused for white spore.
@@ -151,19 +139,6 @@ namespace DimDream.Content.NPCs
 			var entitySource = NPC.GetSource_FromAI();
 
 			Projectile.NewProjectile(entitySource, position, direction, type, damage, 0f);
-		}
-
-		public void DiagonalAimedRingLine(Player player, int bullets, int side) {
-			for (int i = 0;  i < bullets; i++) {
-				Vector2 position = NPC.Top + new Vector2(500 * side + Main.rand.Next(-50, 50), Main.rand.Next(-300, -280));
-				Vector2 direction = (player.Center - position).SafeNormalize(Vector2.UnitY);
-				float speed = 4f + (float)i/(bullets/2);
-				int type = ModContent.ProjectileType<BlueRing>();
-				int damage = (int)(ProjDamage * .8);
-				var entitySource = NPC.GetSource_FromAI();
-
-				Projectile.NewProjectile(entitySource, position, direction * speed, type, damage, 0f, Main.myPlayer, 1f);
-			}
 		}
 
 		public void BlueRing(int bullets) {
@@ -355,8 +330,8 @@ namespace DimDream.Content.NPCs
 		}
 
 		public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor) {
-			Vector2 offset = new Vector2(113, 113); // offset to position texture correctly around the boss. Usually half the texture's size
-			float alphaChange = .1f; // how much is the opacity going to change every frame
+			Vector2 offset = new Vector2(113, 113); // Offset to position texture correctly around the boss. Usually half the texture's size
+			float alphaChange = .1f; // How much is the opacity going to change every frame during fade-in/fade-out
 
 			if (Stage == 3 && Counter > 490)
 				spriteBatch.Draw(MagicCircle.Value, NPC.Center - Main.screenPosition - offset, drawColor * ((500 - Counter) % 490 * alphaChange));
@@ -383,24 +358,27 @@ namespace DimDream.Content.NPCs
                 return;
             }
 
-            float speed = 5f;
-			float inertia = 10;
-			float slowdownRange = speed * 10;
-			Vector2 toDestination = CenterPosition + MoveOffset - NPC.Center;
-			Vector2 destNormalized = toDestination.SafeNormalize(Vector2.UnitY);
+            
 
 			if (Counter <= 1 || !Moving)
 				Counter++;
 
-			if (Counter == 1) {
+			// At the first frame of every stage cycle, change the boss' destination
+			if (Counter == 1 && Main.netMode != NetmodeID.MultiplayerClient) {
                 CenterPosition = new Vector2(player.Top.X, player.Top.Y - 320f);
-                MoveOffset = new Vector2(Main.rand.Next(-200, 200), Main.rand.Next(-50, 50));
-				toDestination = CenterPosition + MoveOffset - NPC.Center;
-				destNormalized = toDestination.SafeNormalize(Vector2.UnitY);
-				NPC.netUpdate = true;
+                Vector2 MoveOffset = new Vector2(Main.rand.Next(-200, 200), Main.rand.Next(-50, 50));
+				Destination = CenterPosition + MoveOffset;
+                NPC.netUpdate = true; // Update Destination to every client so they know where the boss should move towards
 			}
 
-			Vector2 moveTo = toDestination.Length() < slowdownRange ?
+            float speed = 5f;
+            float inertia = 10;
+            float slowdownRange = speed * 10;
+            Vector2 destNormalized;
+            Vector2 toDestination = Destination - NPC.Center;
+            destNormalized = toDestination.SafeNormalize(Vector2.UnitY);
+
+            Vector2 moveTo = toDestination.Length() < slowdownRange ?
 							 destNormalized * (toDestination.Length() / slowdownRange * speed)
 							 : destNormalized * speed;
 
@@ -421,8 +399,8 @@ namespace DimDream.Content.NPCs
 		public override void FindFrame(int frameHeight) {
 			int frameSpeed = 20;
 			NPC.frameCounter += 0.5f;
-			NPC.frameCounter += NPC.velocity.Length() / 10f; // Make the counter go faster with more movement speed
 
+			// Blinking frames only run once every 5 animation cycles
 			if (NPC.frameCounter > frameSpeed) {
 				NPC.frameCounter = 0;
 				NPC.frame.Y += frameHeight;
