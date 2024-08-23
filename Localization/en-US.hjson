@@ -1,11 +1,11 @@
 Mods: {
 	DimDream: {
-		NPCs.ChiyuriBoss.DisplayName: Chiyuri Boss
+		NPCs.ChiyuriBoss.DisplayName: Chiyuri Kitashirakawa
 
 		Items: {
 			MiniatureHypervessel: {
 				DisplayName: Miniature Hypervessel
-				Tooltip: ""
+				Tooltip: Summons Chiyuri Kitashirakawa, Resident of Fantasy That Runs Through Time.
 			}
 		}
 
