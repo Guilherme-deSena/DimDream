@@ -5,7 +5,26 @@ Mods: {
 		Items: {
 			MiniatureHypervessel: {
 				DisplayName: Miniature Hypervessel
-				Tooltip: Summons Chiyuri Kitashirakawa, Resident of Fantasy That Runs Through Time.
+				Tooltip: Summons Chiyuri Kitashirakawa, Resident of Fantasy That Runs Through Time
+			}
+
+			RippleStaff: {
+				DisplayName: Ripple Staff
+				Tooltip: Shoots a stream of rapid ripples
+			}
+
+			FlowingBow: {
+				DisplayName: Flowing Bow
+				Tooltip:
+					'''
+					Shoots a burst of arrows
+					Wooden arrows are replaced by massive waves that go through walls
+					'''
+			}
+
+			ChiyuriBag: {
+				DisplayName: Chiyuri Bag
+				Tooltip: ""
 			}
 		}
 
@@ -14,6 +33,8 @@ Mods: {
 			BlueRing.DisplayName: Blue Ring
 			Familiar.DisplayName: Familiar
 			WhiteSpore.DisplayName: White Spore
+			Ripple.DisplayName: Ripple
+			Wave.DisplayName: Wave
 		}
 	}
 }

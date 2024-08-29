@@ -7,6 +7,25 @@ Mods: {
 				DisplayName: Hipernavio em Miniatura
 				Tooltip: Invoca Chiyuri Kitashirakawa, Residente da Fantasia que Corre pelo Tempo
 			}
+
+			RippleStaff: {
+				DisplayName: Cajado da Ondulação
+				Tooltip: Atira um fluxo de ondulações rápidas
+			}
+
+			FlowingBow: {
+				DisplayName: Arco da Corrente
+				Tooltip:
+					'''
+					Atira uma sequência de flechas.
+					Flechas de madeira são substituídas por ondas gigantes que atravessam paredes
+					'''
+			}
+
+			ChiyuriBag: {
+				// DisplayName: Chiyuri Bag
+				// Tooltip: ""
+			}
 		}
 
 		Projectiles: {
@@ -14,6 +33,8 @@ Mods: {
 			BlueRing.DisplayName: Anel Azul
 			Familiar.DisplayName: Familiar
 			WhiteSpore.DisplayName: Esporo
+			Ripple.DisplayName: Ondulação
+			Wave.DisplayName: Wave
 		}
 	}
 }

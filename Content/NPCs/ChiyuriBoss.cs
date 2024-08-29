@@ -14,6 +14,10 @@ using Microsoft.Xna.Framework;
 using Terraria.DataStructures;
 using ReLogic.Content;
 using Microsoft.Xna.Framework.Graphics;
+using Terraria.GameContent.ItemDropRules;
+using DimDream.Content.Items.Weapons;
+using Terraria.UI;
+using DimDream.Content.Items.Consumables;
 
 namespace DimDream.Content.NPCs
 {
@@ -30,7 +34,7 @@ namespace DimDream.Content.NPCs
 		}
 		private static Asset<Texture2D> MagicCircle { get; set; }
 		private bool Moving { get => NPC.velocity.Length() >= 1; }
-		private float Pi { get => MathHelper.Pi; }
+		private static float Pi { get => MathHelper.Pi; }
 		private int Stage { // Stage is decided by the boss' health percentage
             get {
 				if (NPC.life > NPC.lifeMax * .80)
@@ -306,8 +310,18 @@ namespace DimDream.Content.NPCs
 			}
 		}
 
-        public override void OnKill()
-        {
+        public override void ModifyNPCLoot(NPCLoot npcLoot) {
+            // All the Classic Mode drops here are based on "not expert", meaning we use .OnSuccess() to add them into the rule, which then gets added
+            LeadingConditionRule notExpertRule = new LeadingConditionRule(new Conditions.NotExpert());
+
+			// Notice we use notExpertRule.OnSuccess instead of npcLoot.Add so it only applies in normal mode
+			notExpertRule.OnSuccess(ItemDropRule.OneFromOptions(1, [ModContent.ItemType<FlowingBow>(), ModContent.ItemType<RippleStaff>()]));
+
+            // Add the treasure bag using ItemDropRule.BossBag (automatically checks for expert mode)
+            npcLoot.Add(ItemDropRule.BossBag(ModContent.ItemType<ChiyuriBag>()));
+        }
+
+        public override void OnKill() {
             // This sets downedChiyuriBoss to true, and if it was false before, it initiates a lantern night
             NPC.SetEventFlagCleared(ref DownedBossSystem.downedChiyuriBoss, -1);
         }
