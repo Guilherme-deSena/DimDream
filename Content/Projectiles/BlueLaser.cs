@@ -11,14 +11,11 @@ namespace DimDream.Content.Projectiles
 {
 	public class BlueLaser : ModProjectile
 	{
-		// Use a different style for constant so it is very clear in code when a constant is used
 		// The distance charge particle from the projectile start
 		private const float MOVE_DISTANCE = 0f;
 		// How fast the projectile grows and retracts at the beginning and end of its lifespan
 		private const float GROW_SPEED = 11f;
 
-		// The actual distance is stored in the ai0 field
-		// By making a property to handle this it makes our life easier, and the accessibility more readable
 		public float Distance {
 			get => Projectile.ai[0];
 			set => Projectile.ai[0] = value;
@@ -30,7 +27,6 @@ namespace DimDream.Content.Projectiles
 			set => Projectile.ai[1] = value;
 		}
 
-		// How long the laser can be
 		public float MaxLength { get; set; } = 2200f;
 
 
@@ -51,12 +47,12 @@ namespace DimDream.Content.Projectiles
 
 		public override bool PreDraw(ref Color lightColor) {
 			DrawLaser(Main.spriteBatch, TextureAssets.Projectile[Type].Value, Projectile.position,
-					  Projectile.velocity, 10, -1.57f, 1f, 1000f, Color.White, (int)MOVE_DISTANCE);
+					  Projectile.velocity, 10, -1.57f, 1f, (int)MOVE_DISTANCE);
 			return false;
 		}
 
 		// The core function of drawing a laser
-		public void DrawLaser(SpriteBatch spriteBatch, Texture2D texture, Vector2 start, Vector2 unit, float step, float rotation = 0f, float scale = 1f, float maxDist = 2000f, Color color = default(Color), int transDist = 50) {
+		public void DrawLaser(SpriteBatch spriteBatch, Texture2D texture, Vector2 start, Vector2 unit, float step, float rotation = 0f, float scale = 1f, int transDist = 50) {
 			float r = unit.ToRotation() + rotation;
 			// Draws the laser 'body'
 			for (float i = transDist; i <= Distance; i += step) {
@@ -85,12 +81,8 @@ namespace DimDream.Content.Projectiles
 				Projectile.position + unit * Distance, 22, ref point);
 		}
 
-		// The AI of the Projectile
 		public override void AI() {
-			Player player = Main.player[Projectile.owner];
-			//Projectile.position += Projectile.velocity * MOVE_DISTANCE;
-
-			Projectile.netUpdate = true;
+			// Projectile.netUpdate = true; // Uncomment if there are any desync issues
 
 			SetLaserPosition();
 			SpawnDusts();
@@ -110,7 +102,7 @@ namespace DimDream.Content.Projectiles
 			for (int i = 0; i < 2; ++i) {
 				float num1 = Projectile.velocity.ToRotation() + (Main.rand.NextBool(2) ? -1.0f : 1.0f) * 1.57f;
 				float num2 = (float)(Main.rand.NextDouble() * 0.8f + 1.0f);
-				Vector2 dustVel = new Vector2((float)Math.Cos(num1) * num2, (float)Math.Sin(num1) * num2);
+				Vector2 dustVel = new((float)Math.Cos(num1) * num2, (float)Math.Sin(num1) * num2);
 				Dust dust = Main.dust[Dust.NewDust(dustPos, 0, 0, DustID.Electric, dustVel.X, dustVel.Y)];
 				dust.noGravity = true;
 				dust.scale = 1.2f;
@@ -130,14 +122,11 @@ namespace DimDream.Content.Projectiles
 				unit = dustPos - Projectile.position;
 				unit.Normalize();
 				dust = Main.dust[Dust.NewDust(Projectile.position + 55 * unit, 8, 8, DustID.Smoke, 0.0f, 0.0f, 100, new Color(), 1.5f)];
-				dust.velocity = dust.velocity * 0.5f;
+				dust.velocity *= 0.5f;
 				dust.velocity.Y = -Math.Abs(dust.velocity.Y);
 			}
 		}
 
-		/*
-		* Sets the end of the laser position based on where it collides with something
-		*/
 		private void SetLaserPosition() {
 			if (Distance <= MaxLength && !ShouldRetract)
 				Distance += GROW_SPEED;

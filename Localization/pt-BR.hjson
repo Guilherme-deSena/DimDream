@@ -1,6 +1,9 @@
 Mods: {
 	DimDream: {
-		NPCs.ChiyuriBoss.DisplayName: Chiyuri Kitashirakawa
+		NPCs: {
+			ChiyuriBoss.DisplayName: Chiyuri Kitashirakawa
+			// YumemiBoss.DisplayName: Yumemi Boss
+		}
 
 		Items: {
 			MiniatureHypervessel: {
@@ -35,6 +38,7 @@ Mods: {
 			WhiteSpore.DisplayName: Esporo
 			Ripple.DisplayName: Ondulação
 			Wave.DisplayName: Wave
+			// Cross.DisplayName: Cross
 		}
 	}
 }
