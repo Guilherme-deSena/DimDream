@@ -35,7 +35,7 @@ namespace DimDream.Content.Projectiles
             DrawOffsetX = -4;
             DrawOriginOffsetY = -4;
             Projectile.alpha = 255;
-			Projectile.timeLeft = 800;
+			Projectile.timeLeft = 600;
 			Projectile.penetrate = -1;
 			Projectile.friendly = false;
 			Projectile.hostile = true;

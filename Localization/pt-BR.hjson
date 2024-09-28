@@ -29,6 +29,11 @@ Mods: {
 				// DisplayName: Chiyuri Bag
 				// Tooltip: ""
 			}
+
+			PocketCollider: {
+				// DisplayName: Pocket Collider
+				// Tooltip: ""
+			}
 		}
 
 		Projectiles: {
@@ -39,6 +44,11 @@ Mods: {
 			Ripple.DisplayName: Ondulação
 			Wave.DisplayName: Wave
 			// Cross.DisplayName: Cross
+			// FamiliarGimmick.DisplayName: Familiar Gimmick
+			// ReceptacleBullet.DisplayName: Receptacle Bullet
+			// ThrownFamiliar.DisplayName: Thrown Familiar
+			// SpawnedFamiliar.DisplayName: Spawned Familiar
+			// ShootingFamiliar.DisplayName: Shooting Familiar
 		}
 	}
 }

@@ -77,7 +77,7 @@ namespace DimDream.Content.NPCs
 				int side = i == 0 ? 1 : -1;
 				Vector2 direction = new Vector2(side, -0.5f);
 				float speed = 8f;
-				int type = ModContent.ProjectileType<Familiar>();
+				int type = ModContent.ProjectileType<ShootingFamiliar>();
 				int damage = (int)(ProjDamage * .8);
 				var entitySource = NPC.GetSource_FromAI();
 
@@ -89,7 +89,7 @@ namespace DimDream.Content.NPCs
 			Vector2 position = NPC.Top + new Vector2(Main.rand.Next(-1200, 1200), -1200 + Main.rand.Next(-100, 100));
 			Vector2 direction = new Vector2(Main.rand.NextFloat(-1, 1), 1);
 
-			float speed = Main.rand.NextFloat(.2f, .5f);
+			float speed = Main.rand.NextFloat(2f, 5f);
 			int type = ModContent.ProjectileType<WhiteSpore>();
 			int damage = ProjDamage / 2;
 			var entitySource = NPC.GetSource_FromAI();
@@ -100,7 +100,10 @@ namespace DimDream.Content.NPCs
 		public void CrossedSpores(int bullets, int rotation) {
 			for (int j = 0; j < 2; j++) {
 				for (int i = 1; i < bullets+1; i++) {
-					int xSpacing = 16;
+					Color color = Color.LightYellow;
+                    int colorNumber = (color.A << 24) | (color.R << 16) | (color.G << 8) | color.B;
+
+                    int xSpacing = 16;
 					int ySpacing = 8;
 					int side = j == 0 ? 1 : -1;
 					float angleOffset = 5;
@@ -113,7 +116,7 @@ namespace DimDream.Content.NPCs
 					int damage = ProjDamage;
 					var entitySource = NPC.GetSource_FromAI();
 
-					Projectile.NewProjectile(entitySource, position, direction*speed, type, damage, 0f, Main.myPlayer, 1f);
+					Projectile.NewProjectile(entitySource, position, direction*speed, type, damage, 0f, Main.myPlayer, 1, colorNumber);
 				}
 			}
 		}
@@ -130,7 +133,7 @@ namespace DimDream.Content.NPCs
 				int damage = ProjDamage;
 				var entitySource = NPC.GetSource_FromAI();
 
-				Projectile.NewProjectile(entitySource, position, direction2 * speed, type, damage, 0f, Main.myPlayer);
+				Projectile.NewProjectile(entitySource, position, direction2 * speed, type, damage, 0f, Main.myPlayer, 1);
 			}
 		}
 

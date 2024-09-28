@@ -11,16 +11,21 @@ namespace DimDream.Content.Projectiles
 {
     internal class Cross : ModProjectile
     {
-        public const float GROW_SPEED = 2f;
+        public const float GROW_SPEED = 10f;
+        public const float MAX_LENGTH = 140f;
         public float Distance
         {
             get => Projectile.ai[0];
             set => Projectile.ai[0] = value;
         }
+        public bool FadedIn
+        {
+            get => Projectile.localAI[0] == 1f;
+            set => Projectile.localAI[0] = value ? 1f : 0f;
+        }
 
-        public float MaxLength { get; set; } = 90f;
 
-        public bool ShouldRetract => Projectile.timeLeft + 1 <= MaxLength / GROW_SPEED;
+        public bool ShouldRetract => Projectile.timeLeft + 1 <= MAX_LENGTH / GROW_SPEED;
 
         public override void SetDefaults()
         {
@@ -30,20 +35,22 @@ namespace DimDream.Content.Projectiles
             Projectile.penetrate = -1;
             Projectile.tileCollide = false;
             Projectile.timeLeft = 200;
+            CooldownSlot = ImmunityCooldownID.Bosses;
 
-            CooldownSlot = ImmunityCooldownID.Bosses; // use the boss immunity cooldown counter, to prevent ignoring boss attacks by taking damage from other sources
+            Distance = 30f;
+
         }
 
         public override bool PreDraw(ref Color lightColor)
         {
-            DrawCross(Main.spriteBatch, TextureAssets.Projectile[Type].Value, Projectile.position, new Vector2(1, 0), 10);
+            DrawCross(Main.spriteBatch, TextureAssets.Projectile[Type].Value, Projectile.position, new Vector2(1, 0), 10, lightColor);
             return false;
         }
 
         // The core function of drawing a laser
-        public void DrawCross(SpriteBatch spriteBatch, Texture2D texture, Vector2 start, Vector2 unit, float step, float scale = 1f)
+        public void DrawCross(SpriteBatch spriteBatch, Texture2D texture, Vector2 start, Vector2 unit, float step, Color lightColor, float scale = 1f)
         {
-
+            Color c = lightColor;
             for (int j = 0; j < 4; j++)
             {
                 float rotation = (MathHelper.Pi / 2) * j;
@@ -53,7 +60,6 @@ namespace DimDream.Content.Projectiles
                 // Draws the body
                 for (float i = 0; i <= sideDistance; i += step)
                 {
-                    Color c = Color.White;
                     var origin = start + i * direction;
                     spriteBatch.Draw(texture, origin - Main.screenPosition,
                         new Rectangle(0, 0, 48, 10), c, rotation,
@@ -62,19 +68,20 @@ namespace DimDream.Content.Projectiles
 
                 // Draws the border
                 spriteBatch.Draw(texture, start + (sideDistance) * direction - Main.screenPosition,
-                    new Rectangle(0, 12, 48, 10), Color.White, rotation,
+                    new Rectangle(0, 12, 48, 10), c, rotation,
                     new Vector2(48 * .5f, 10 * .5f), scale, 0, 0);
-
-                // Draws the base
-                spriteBatch.Draw(texture, start - Main.screenPosition,
-                    new Rectangle(0, 24, 48, 48), Color.White, 0,
-                    new Vector2(48 * .5f, 48 * .5f), scale, 0, 0);
             }
+
+            // Draws the base
+            spriteBatch.Draw(texture, start - Main.screenPosition,
+                new Rectangle(0, 24, 48, 48), c, 0,
+                new Vector2(48 * .5f, 48 * .5f), scale, 0, 0);
         }
 
         public override void AI()
         {
             RaiseCrossLength();
+            CastLights();
 
             if (ShouldRetract)
             {
@@ -100,10 +107,27 @@ namespace DimDream.Content.Projectiles
             return false;
         }
 
+
         private void RaiseCrossLength()
         {
-            if (Distance <= MaxLength && !ShouldRetract)
+            if (Distance <= MAX_LENGTH && !ShouldRetract)
                 Distance += GROW_SPEED;
         }
+
+        private void CastLights()
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                float rotation = (MathHelper.Pi / 2) * i;
+                Vector2 direction = new Vector2(0, -1).RotatedBy(rotation);
+                float sideDistance = direction.Y == 1 ? Distance : Distance * .60f;
+
+                // Cast a light along the cross
+                DelegateMethods.v3_1 = new Vector3(0.8f, 0.8f, 1f);
+                Utils.PlotTileLine(Projectile.Center, Projectile.Center + direction * sideDistance, 26, DelegateMethods.CastLight);
+
+            }
+        }
+
     }
 }

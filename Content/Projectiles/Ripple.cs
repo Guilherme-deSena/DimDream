@@ -14,7 +14,7 @@ namespace DimDream.Content.Projectiles
             Projectile.height = 8;
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Magic;
-            Projectile.timeLeft = 600;
+            Projectile.timeLeft = 180;
         }
 
         public override void AI()
