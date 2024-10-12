@@ -10,11 +10,6 @@ namespace DimDream.Content.Items.Weapons
 {
     public class FlowingBow : ModItem
     {
-        public override void SetStaticDefaults()
-        {
-            
-        }
-
         public override void SetDefaults()
         {
             Item.DefaultToBow(40, 24, true);

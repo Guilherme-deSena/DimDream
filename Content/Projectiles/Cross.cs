@@ -9,14 +9,15 @@ using Terraria.ModLoader;
 
 namespace DimDream.Content.Projectiles
 {
-    internal class Cross : ModProjectile
+    internal class CrossBoss : ModProjectile
     {
         public const float GROW_SPEED = 10f;
         public const float MAX_LENGTH = 140f;
+        public override string Texture => "DimDream/Content/Projectiles/CrossRed";
         public float Distance
         {
-            get => Projectile.ai[0];
-            set => Projectile.ai[0] = value;
+            get => Projectile.ai[2];
+            set => Projectile.ai[2] = value;
         }
         public bool FadedIn
         {
@@ -36,9 +37,7 @@ namespace DimDream.Content.Projectiles
             Projectile.tileCollide = false;
             Projectile.timeLeft = 200;
             CooldownSlot = ImmunityCooldownID.Bosses;
-
             Distance = 30f;
-
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -128,6 +127,21 @@ namespace DimDream.Content.Projectiles
 
             }
         }
+    }
 
+    internal class CrossWeapon : CrossBoss
+    {
+        public override string Texture => "DimDream/Content/Projectiles/CrossBlue";
+        public override void SetDefaults()
+        {
+            Projectile.friendly = true;
+            Projectile.hostile = false;
+            Projectile.timeLeft = 60;
+            Projectile.height = 10;
+            Projectile.width = 10;
+            Projectile.penetrate = -1;
+            Projectile.tileCollide = false;
+            Distance = 30f;
+        }
     }
 }

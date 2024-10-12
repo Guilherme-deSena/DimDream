@@ -13,9 +13,11 @@ namespace DimDream.Common.Systems
 	public class DownedBossSystem : ModSystem
 	{
 		public static bool downedChiyuriBoss = false;
+        public static bool downedYumemiBoss = false;
 
-		public override void ClearWorld() {
+        public override void ClearWorld() {
 			downedChiyuriBoss = false;
+			downedYumemiBoss = false;
 		}
 
 		// We save our data sets using TagCompounds.
@@ -23,18 +25,24 @@ namespace DimDream.Common.Systems
 		public override void SaveWorldData(TagCompound tag) {
 			if (downedChiyuriBoss) {
 				tag["downedChiyuriBoss"] = true;
-			}
-		}
+            }
+            if (downedYumemiBoss)
+            {
+                tag["downedYumemiBoss"] = true;
+            }
+        }
 
 		public override void LoadWorldData(TagCompound tag) {
 			downedChiyuriBoss = tag.ContainsKey("downedChiyuriBoss");
-		}
+            downedYumemiBoss = tag.ContainsKey("downedYumemiBoss");
+        }
 
 		public override void NetSend(BinaryWriter writer) {
 			// Order of operations is important and has to match that of NetReceive
 			var flags = new BitsByte();
 			flags[0] = downedChiyuriBoss;
-			writer.Write(flags);
+            flags[1] = downedChiyuriBoss;
+            writer.Write(flags);
 
 			/*
 			Remember that Bytes/BitsByte only have up to 8 entries. If you have more than 8 flags you want to sync, use multiple BitsByte:
@@ -85,14 +93,14 @@ namespace DimDream.Common.Systems
 			// Order of operations is important and has to match that of NetSend
 			BitsByte flags = reader.ReadByte();
 			downedChiyuriBoss = flags[0];
-			// downedOtherBoss = flags[1];
+            downedYumemiBoss = flags[1];
 
-			// As mentioned in NetSend, BitBytes can contain up to 8 values. If you have more, be sure to read the additional data:
-			// BitsByte flags2 = reader.ReadByte();
-			// downed9thBoss = flags2[0];
+            // As mentioned in NetSend, BitBytes can contain up to 8 values. If you have more, be sure to read the additional data:
+            // BitsByte flags2 = reader.ReadByte();
+            // downed9thBoss = flags2[0];
 
-			// System.Collections.BitArray approach:
-			/*
+            // System.Collections.BitArray approach:
+            /*
 			int length = reader.ReadInt32();
 			byte[] bytes = reader.ReadBytes(length);
 
@@ -100,6 +108,6 @@ namespace DimDream.Common.Systems
 			downedMinionBoss = bitArray[0];
 			downedOtherBoss = bitArray[1];
 			*/
-		}
+        }
 	}
 }

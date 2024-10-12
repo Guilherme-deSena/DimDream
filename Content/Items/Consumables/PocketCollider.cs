@@ -8,6 +8,7 @@ using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria;
+using Microsoft.Xna.Framework;
 
 namespace DimDream.Content.Items.Consumables
 {
@@ -21,8 +22,8 @@ namespace DimDream.Content.Items.Consumables
 
         public override void SetDefaults()
         {
-            Item.width = 64;
-            Item.height = 64;
+            Item.width = 28;
+            Item.height = 38;
             Item.maxStack = 9999;
             Item.value = 100;
             Item.rare = ItemRarityID.Blue;

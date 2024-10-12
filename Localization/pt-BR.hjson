@@ -2,7 +2,7 @@ Mods: {
 	DimDream: {
 		NPCs: {
 			ChiyuriBoss.DisplayName: Chiyuri Kitashirakawa
-			// YumemiBoss.DisplayName: Yumemi Boss
+			YumemiBoss.DisplayName: Yumemi Okazaki
 		}
 
 		Items: {
@@ -20,19 +20,52 @@ Mods: {
 				DisplayName: Arco da Corrente
 				Tooltip:
 					'''
-					Atira uma sequência de flechas.
+					Atira uma sequência de flechas
 					Flechas de madeira são substituídas por ondas gigantes que atravessam paredes
 					'''
 			}
 
 			ChiyuriBag: {
-				// DisplayName: Chiyuri Bag
-				// Tooltip: ""
+				DisplayName: Bolsa do Tesouro (Chiyuri Kitashirakawa)
+				Tooltip: "{$CommonItemTooltip.RightClickToOpen}"
 			}
 
 			PocketCollider: {
-				// DisplayName: Pocket Collider
-				// Tooltip: ""
+				DisplayName: Colisor de Bolso
+				Tooltip: Invoca Yumemi Okazaki, Lenda da Fantasia
+			}
+
+			YumemisCross: {
+				DisplayName: Cruz Mágica
+				Tooltip:
+					'''
+					Um dispositivo mágico capaz de atirar outras cruzes
+					[c/AAAAAA:"Parece mais a humanidade aprendendo a contar!"]
+					'''
+			}
+
+			YumemiBag: {
+				DisplayName: Bolsa do Tesouro (Yumemi Okazaki)
+				Tooltip: "{$CommonItemTooltip.RightClickToOpen}"
+			}
+
+			IcbmLauncher: {
+				DisplayName: Lançador de ICBM
+				Tooltip: Invoca Mimi-Chan, a fofa Míssil Balístico Intercontinental, para lutar por você
+			}
+
+			RedButton: {
+				DisplayName: Botão Vermelho
+				Tooltip:
+					'''
+					Esse botão irradia uma sensação ameaçadora, com uma antena e um sensor adjuntos a ele
+					Seja lá o que for fazer, evacue a área primeiro
+					'''
+			}
+
+			ArcaneBombBook: {
+				DisplayName: Bomba Arcana
+				Tooltip: Atira uma bomba que transcende o próprio tempo e faz fragmentos serem jogados de novo e de novo
 			}
 		}
 
@@ -42,13 +75,28 @@ Mods: {
 			Familiar.DisplayName: Familiar
 			WhiteSpore.DisplayName: Esporo
 			Ripple.DisplayName: Ondulação
-			Wave.DisplayName: Wave
-			// Cross.DisplayName: Cross
-			// FamiliarGimmick.DisplayName: Familiar Gimmick
-			// ReceptacleBullet.DisplayName: Receptacle Bullet
-			// ThrownFamiliar.DisplayName: Thrown Familiar
-			// SpawnedFamiliar.DisplayName: Spawned Familiar
-			// ShootingFamiliar.DisplayName: Shooting Familiar
+			Wave.DisplayName: Onda
+			Cross.DisplayName: Cruz
+			FamiliarGimmick.DisplayName: Familiar
+			ReceptacleBullet.DisplayName: Bala Mágica
+			ThrownFamiliar.DisplayName: Familiar
+			SpawnedFamiliar.DisplayName: Familiar
+			ShootingFamiliar.DisplayName: Familiar
+			MimiChan.DisplayName: Mimi-Chan
+			MimiChanExplosion.DisplayName: Mimi-Chan
+			MimiChanRanged.DisplayName: Mimi-Chan
+			MimiChanSummon.DisplayName: Mimi-Chan
+			ArcaneBomb.DisplayName: Bomba Arcana
+			ArcaneFragment.DisplayName: Fragmento Arcano
+			CrossWeapon.DisplayName: Cruz
+			CrossBoss.DisplayName: Cruz
+		}
+
+		Buffs: {
+			MimiChanBuff: {
+				DisplayName: Mimi-Chan
+				Description: Uma ICBM lutará por você
+			}
 		}
 	}
 }

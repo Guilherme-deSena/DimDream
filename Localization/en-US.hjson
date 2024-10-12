@@ -2,7 +2,7 @@ Mods: {
 	DimDream: {
 		NPCs: {
 			ChiyuriBoss.DisplayName: Chiyuri Kitashirakawa
-			YumemiBoss.DisplayName: Yumemi Boss
+			YumemiBoss.DisplayName: Yumemi Okazaki
 		}
 
 		Items: {
@@ -26,13 +26,46 @@ Mods: {
 			}
 
 			ChiyuriBag: {
-				DisplayName: Chiyuri Bag
-				Tooltip: ""
+				DisplayName: Treasure Bag (Chiyuri Kitashirakawa)
+				Tooltip: "{$CommonItemTooltip.RightClickToOpen}"
 			}
 
 			PocketCollider: {
 				DisplayName: Pocket Collider
-				Tooltip: ""
+				Tooltip: Summons Yumemi Okazaki, Fantasy Legend
+			}
+
+			YumemisCross: {
+				DisplayName: Magic Cross
+				Tooltip:
+					'''
+					A magical device capable of shooting more crosses
+					[c/AAAAAA:"Looks more like humanity learning to count!"]
+					'''
+			}
+
+			YumemiBag: {
+				DisplayName: Treasure Bag (Yumemi Okazaki)
+				Tooltip: "{$CommonItemTooltip.RightClickToOpen}"
+			}
+
+			IcbmLauncher: {
+				DisplayName: ICBM Launcher
+				Tooltip: Summons Mimi-Chan, the cute Intercontinental Ballistic Missile, to fight for you
+			}
+
+			RedButton: {
+				DisplayName: Red Button
+				Tooltip:
+					'''
+					This button has an ominous feeling, along with an antenna and a sensor attached to it
+					Whatever you do, make sure to evacuate the area first
+					'''
+			}
+
+			ArcaneBombBook: {
+				DisplayName: Arcane Bomb
+				Tooltip: Shoots a bomb that glitches time itself to make shards spawn again and again
 			}
 		}
 
@@ -44,11 +77,26 @@ Mods: {
 			Ripple.DisplayName: Ripple
 			Wave.DisplayName: Wave
 			Cross.DisplayName: Cross
-			FamiliarGimmick.DisplayName: Familiar Gimmick
-			ReceptacleBullet.DisplayName: Receptacle Bullet
-			ThrownFamiliar.DisplayName: Thrown Familiar
-			SpawnedFamiliar.DisplayName: Spawned Familiar
-			ShootingFamiliar.DisplayName: Shooting Familiar
+			FamiliarGimmick.DisplayName: Familiar
+			ReceptacleBullet.DisplayName: Magical Bullet
+			ThrownFamiliar.DisplayName: Familiar
+			SpawnedFamiliar.DisplayName: Familiar
+			ShootingFamiliar.DisplayName: Familiar
+			MimiChan.DisplayName: Mimi-Chan
+			MimiChanExplosion.DisplayName: Mimi-Chan
+			MimiChanRanged.DisplayName: Mimi-Chan
+			MimiChanSummon.DisplayName: Mimi-Chan
+			ArcaneBomb.DisplayName: Arcane Bomb
+			ArcaneFragment.DisplayName: Arcane Fragment
+			CrossWeapon.DisplayName: Cross
+			CrossBoss.DisplayName: Cross
+		}
+
+		Buffs: {
+			MimiChanBuff: {
+				DisplayName: Mimi-Chan
+				Description: An ICBM will fight for you
+			}
 		}
 	}
 }

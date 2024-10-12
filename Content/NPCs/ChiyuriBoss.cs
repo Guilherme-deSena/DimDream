@@ -299,7 +299,7 @@ namespace DimDream.Content.NPCs
 			NPC.knockBackResist = 0f;
 			NPC.noGravity = true;
 			NPC.noTileCollide = true;
-			NPC.value = Item.buyPrice(gold: 5);
+			NPC.value = Item.buyPrice(gold: 15);
 			NPC.SpawnWithHigherTime(30);
 			NPC.boss = true;
 			NPC.npcSlots = 10f; // Take up open spawn slots, preventing random NPCs from spawning during the fight
@@ -319,6 +319,7 @@ namespace DimDream.Content.NPCs
 
 			// Notice we use notExpertRule.OnSuccess instead of npcLoot.Add so it only applies in normal mode
 			notExpertRule.OnSuccess(ItemDropRule.OneFromOptions(1, [ModContent.ItemType<FlowingBow>(), ModContent.ItemType<RippleStaff>()]));
+            npcLoot.Add(notExpertRule);
 
             // Add the treasure bag using ItemDropRule.BossBag (automatically checks for expert mode)
             npcLoot.Add(ItemDropRule.BossBag(ModContent.ItemType<ChiyuriBag>()));
@@ -333,7 +334,7 @@ namespace DimDream.Content.NPCs
 			// Sets the description of this NPC that is listed in the bestiary
 			bestiaryEntry.Info.AddRange(new List<IBestiaryInfoElement> {
 				new MoonLordPortraitBackgroundProviderBestiaryInfoElement(), // Plain black background
-				new FlavorTextBestiaryInfoElement("Chiyuri comes from the outside world to do some bamboozling.")
+				new FlavorTextBestiaryInfoElement("Crew member for the Probability Space Hypervessel, currently helping Yumemi find proof of the existence of magic.")
 			});
 		}
 

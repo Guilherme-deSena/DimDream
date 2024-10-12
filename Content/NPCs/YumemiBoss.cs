@@ -74,18 +74,6 @@ namespace DimDream.Content.NPCs
             set => NPC.localAI[3] = value;
         }
 
-        public void ThrowCross(Player player)
-        {
-            Vector2 position = NPC.Center;
-            Vector2 destination = player.Center;
-
-            int type = ModContent.ProjectileType<ThrownFamiliar>();
-            int damage = (int)ProjDamage;
-            var entitySource = NPC.GetSource_FromAI();
-
-            Projectile.NewProjectile(entitySource, position, destination, type, damage, 0f, Main.myPlayer, NPC.whoAmI);
-        }
-
         public void SpawnCross(Player player)
         {
             Vector2 position = player.Center;
@@ -245,10 +233,10 @@ namespace DimDream.Content.NPCs
                 if (Counter >= 60 && Counter <= 180 && Counter % 30 == 0)
                     SpawnCross(player);
 
-                if (Counter >= 440 && Counter % 10 == 0)
+                if (Counter >= 450 && Counter % 10 == 0)
                 {
                     int bombBullets = Main.expertMode ? 24 : 16;
-                    float offset1 = Counter < 470 ? 0 : Pi / 3;
+                    float offset1 = Counter <= 470 ? 0 : Pi / 3;
                     float offset2 = Counter % 30 / 10;
                     Vector2 positionOffset = new((float)Math.Sin(offset1 + Pi / 1.5 * offset2) * 100, (float)Math.Cos(offset1 + Pi / 1.5 * offset2) * 100);
                     Vector2 position = NPC.Center + positionOffset;
@@ -443,7 +431,7 @@ namespace DimDream.Content.NPCs
             NPC.knockBackResist = 0f;
             NPC.noGravity = true;
             NPC.noTileCollide = true;
-            NPC.value = Item.buyPrice(gold: 5);
+            NPC.value = Item.buyPrice(gold: 20);
             NPC.SpawnWithHigherTime(30);
             NPC.boss = true;
             NPC.npcSlots = 10f;
@@ -462,16 +450,17 @@ namespace DimDream.Content.NPCs
             LeadingConditionRule notExpertRule = new(new Conditions.NotExpert());
 
             // Notice we use notExpertRule.OnSuccess instead of npcLoot.Add so it only applies in normal mode
-            notExpertRule.OnSuccess(ItemDropRule.OneFromOptions(1, [ModContent.ItemType<FlowingBow>(), ModContent.ItemType<RippleStaff>()]));
+            notExpertRule.OnSuccess(ItemDropRule.OneFromOptions(1, [ModContent.ItemType<YumemisCross>(), ModContent.ItemType<RedButton>(), ModContent.ItemType<IcbmLauncher>(), ModContent.ItemType<ArcaneBombBook>()]));
+            npcLoot.Add(notExpertRule);
 
             // Add the treasure bag using ItemDropRule.BossBag (automatically checks for expert mode)
-            npcLoot.Add(ItemDropRule.BossBag(ModContent.ItemType<ChiyuriBag>()));
+            npcLoot.Add(ItemDropRule.BossBag(ModContent.ItemType<YumemiBag>()));
         }
 
         public override void OnKill()
         {
-            // This sets downedChiyuriBoss to true, and if it was false before, it initiates a lantern night
-            NPC.SetEventFlagCleared(ref DownedBossSystem.downedChiyuriBoss, -1);
+            // This sets downedYumemiBoss to true, and if it was false before, it initiates a lantern night
+            NPC.SetEventFlagCleared(ref DownedBossSystem.downedYumemiBoss, -1);
         }
 
         public override void SetBestiary(BestiaryDatabase database, BestiaryEntry bestiaryEntry)
@@ -479,7 +468,7 @@ namespace DimDream.Content.NPCs
             // Sets the description of this NPC that is listed in the bestiary
             bestiaryEntry.Info.AddRange([
                 new MoonLordPortraitBackgroundProviderBestiaryInfoElement(), // Plain black background
-				new FlavorTextBestiaryInfoElement("Chiyuri comes from the outside world to do some bamboozling.")
+				new FlavorTextBestiaryInfoElement("Captain of the Probability Space Hypervessel, looking to test the magical powers in the world of Terraria so she can write her thesis.")
             ]);
         }
 

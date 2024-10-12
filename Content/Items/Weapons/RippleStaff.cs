@@ -19,18 +19,12 @@ namespace DimDream.Content.Items.Weapons
 
         public override void SetDefaults()
         {
-            // DefaultToStaff handles setting various Item values that magic staff weapons use.
-            // Hover over DefaultToStaff in Visual Studio to read the documentation!
             Item.DefaultToStaff(ModContent.ProjectileType<Ripple>(), 16, 6, 3);
+            Item.SetWeaponValues(15, 3);
+            Item.SetShopValues(ItemRarityColor.Green2, 60000);
 
             // Item21 is mini-splash sound
             Item.UseSound = SoundID.Item21;
-
-            // Set damage and knockBack
-            Item.SetWeaponValues(15, 3);
-
-            // Set rarity and value
-            Item.SetShopValues(ItemRarityColor.Green2, 60000);
         }
 
         public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockBack)
@@ -41,15 +35,13 @@ namespace DimDream.Content.Items.Weapons
             // Calculate the perpendicular vector to the velocity
             Vector2 perpendicular = Vector2.Normalize(new Vector2(-velocity.Y, velocity.X)) * offset;
 
-            // First projectile
             Vector2 firstPosition = position + perpendicular;
             Projectile.NewProjectile(source, firstPosition, velocity, type, damage, knockBack, player.whoAmI);
 
-            // Second projectile
             Vector2 secondPosition = position - perpendicular;
             Projectile.NewProjectile(source, secondPosition, velocity, type, damage, knockBack, player.whoAmI);
 
-            return false;  // Return false to prevent vanilla behavior
+            return false;
         }
     }
 }

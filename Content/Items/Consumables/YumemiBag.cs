@@ -4,10 +4,11 @@ using Terraria;
 using Terraria.GameContent.ItemDropRules;
 using Terraria.ID;
 using Terraria.ModLoader;
+using DimDream.Content.Projectiles;
 
 namespace DimDream.Content.Items.Consumables
 {
-    public class ChiyuriBag : ModItem
+    public class YumemiBag : ModItem
     {
         public override void SetStaticDefaults()
         {
@@ -37,9 +38,8 @@ namespace DimDream.Content.Items.Consumables
 
         public override void ModifyItemLoot(ItemLoot itemLoot)
         {
-            itemLoot.Add(ItemDropRule.OneFromOptions(1, [ModContent.ItemType<FlowingBow>(),
-                                                         ModContent.ItemType<RippleStaff>()]));
-            itemLoot.Add(ItemDropRule.CoinsBasedOnNPCValue(ModContent.NPCType<ChiyuriBoss>()));
+            itemLoot.Add(ItemDropRule.OneFromOptions(1, [ModContent.ItemType<YumemisCross>(), ModContent.ItemType<RedButton>(), ModContent.ItemType<IcbmLauncher>(), ModContent.ItemType<ArcaneBombBook>()]));
+            itemLoot.Add(ItemDropRule.CoinsBasedOnNPCValue(ModContent.NPCType<YumemiBoss>()));
         }
     }
 }

@@ -69,10 +69,10 @@ namespace DimDream.Content.Projectiles
                 {
                     Vector2 position = Projectile.Center;
                     Vector2 offset = new Vector2(14, 14); // Necessary to align spawning correctly
-                    int type = ModContent.ProjectileType<Cross>();
+                    int type = ModContent.ProjectileType<CrossBoss>();
                     var entitySource = Projectile.GetSource_FromAI();
 
-                    Projectile.NewProjectile(entitySource, position + offset, Vector2.Zero, type, Projectile.damage, 0f, Main.myPlayer);
+                    Projectile p = Projectile.NewProjectileDirect(entitySource, position + offset, Vector2.Zero, type, Projectile.damage, 0f, Main.myPlayer);
                     Projectile.Kill();
                 }
             }
