@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace DimDream.Common.Systems
@@ -42,8 +43,6 @@ namespace DimDream.Common.Systems
                 return;
             }
 
-            // The "LogBoss" method requires many parameters, defined separately below:
-
             // Your entry key can be used by other developers to submit mod-collaborative data to your entry. It should not be changed once defined
             string internalName = "ChiyuriBoss";
 
@@ -59,6 +58,7 @@ namespace DimDream.Common.Systems
             // The item used to summon the boss with (if available)
             int spawnItem = ModContent.ItemType<Content.Items.Consumables.MiniatureHypervessel>();
 
+            LocalizedText spawnInfo = Language.GetText("Mods.DimDream.NPCs.ChiyuriBoss.SpawnInfo");
             // "collectibles" like relic, trophy, mask, pet
             /* List<int> collectibles = new List<int>()
             {
@@ -85,12 +85,32 @@ namespace DimDream.Common.Systems
                 bossType,
                 new Dictionary<string, object>()
                 {
-                    ["spawnItems"] = spawnItem
+                    ["spawnItems"] = spawnItem,
+                    ["spawnInfo"] = spawnInfo
                     // Other optional arguments as needed are inferred from the wiki
                 }
             );
 
-            // Other bosses or additional Mod.Call can be made here.
+            internalName = "YumemiBoss";
+            weight = 11.2f;
+            downed = () => DownedBossSystem.downedYumemiBoss;
+            bossType = ModContent.NPCType<Content.NPCs.YumemiBoss>();
+            spawnItem = ModContent.ItemType<Content.Items.Consumables.PocketCollider>();
+            spawnInfo = Language.GetText("Mods.DimDream.NPCs.YumemiBoss.SpawnInfo");
+
+            bossChecklistMod.Call(
+                "LogBoss",
+                Mod,
+                internalName,
+                weight,
+                downed,
+                bossType,
+                new Dictionary<string, object>()
+                {
+                    ["spawnItems"] = spawnItem,
+                    ["spawnInfo"] = spawnInfo
+                }
+            );
         }
     }
 }

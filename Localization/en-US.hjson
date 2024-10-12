@@ -1,8 +1,13 @@
 Mods: {
 	DimDream: {
 		NPCs: {
-			ChiyuriBoss.DisplayName: Chiyuri Kitashirakawa
+			ChiyuriBoss: {
+				DisplayName: Chiyuri Kitashirakawa
+				SpawnInfo: Use Miniature Hypervessel at any time or place.
+			}
+
 			YumemiBoss.DisplayName: Yumemi Okazaki
+			YumemiBoss.SpawnInfo: Use Pocket Collider at any time or place.
 		}
 
 		Items: {

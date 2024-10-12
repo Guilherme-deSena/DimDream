@@ -1,8 +1,13 @@
 Mods: {
 	DimDream: {
 		NPCs: {
-			ChiyuriBoss.DisplayName: Chiyuri Kitashirakawa
+			ChiyuriBoss: {
+				DisplayName: Chiyuri Kitashirakawa
+				SpawnInfo: Use o Hipernavio em Miniatura em qualquer lugar.
+			}
+
 			YumemiBoss.DisplayName: Yumemi Okazaki
+			YumemiBoss.SpawnInfo: Use o Colisor de Bolso em qualquer lugar.
 		}
 
 		Items: {
