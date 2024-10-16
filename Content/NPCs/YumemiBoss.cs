@@ -60,7 +60,7 @@ namespace DimDream.Content.NPCs
             get
             {
                 if (Main.masterMode)
-                    return NPC.damage / 3;
+                    return NPC.damage / 4;
 
                 if (Main.expertMode)
                     return NPC.damage / 2;
@@ -313,7 +313,7 @@ namespace DimDream.Content.NPCs
                     int bulletType = Counter % 20 == 0 ? ModContent.ProjectileType<ReceptacleBullet>() : ModContent.ProjectileType<WhiteSpore>();
                     int minBullets = Main.expertMode ? 4 : 2;
                     int bulletCount = minBullets + 2 * ((int)Counter % 30 / 5);
-                    ThrowStuff(AimedPosition, bulletType, bulletCount);
+                    ThrowStuff(AimedPosition, bulletType, bulletCount, 10f);
                 }
 
                 if (Counter >= 440 && Counter % 10 == 0)
@@ -356,7 +356,7 @@ namespace DimDream.Content.NPCs
                     int bulletType = Counter % 20 == 0 ? ModContent.ProjectileType<ReceptacleBullet>() : ModContent.ProjectileType<WhiteSpore>();
                     int minBullets = Main.expertMode ? 4 : 2;
                     int bulletCount = minBullets + 2 * ((int)Counter % 30 / 10);
-                    ThrowStuff(AimedPosition, bulletType, bulletCount, 7f);
+                    ThrowStuff(AimedPosition, bulletType, bulletCount, 12f);
                 }
 
                 if (Counter >= 300 && Counter % 5 == 0)
@@ -425,7 +425,7 @@ namespace DimDream.Content.NPCs
             NPC.height = 142;
             NPC.damage = 45;
             NPC.defense = 22;
-            NPC.lifeMax = Main.expertMode ? 24000 : 34000;
+            NPC.lifeMax = 34000;
             NPC.HitSound = SoundID.NPCHit1;
             NPC.DeathSound = SoundID.NPCDeath1;
             NPC.knockBackResist = 0f;
@@ -521,7 +521,7 @@ namespace DimDream.Content.NPCs
 
             Counter++;
 
-            float speed = 8f;
+            float speed = 10f;
             float inertia = 10;
             float slowdownRange = speed * 10;
             Vector2 toDestination = Destination - NPC.Center;

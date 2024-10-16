@@ -37,13 +37,13 @@ namespace DimDream.Content.NPCs
 		private static float Pi { get => MathHelper.Pi; }
 		private int Stage { // Stage is decided by the boss' health percentage
             get {
-				if (NPC.life > NPC.lifeMax * .80)
+				if (NPC.life > NPC.lifeMax * .85)
 					return 0;
 
 				if (NPC.life > NPC.lifeMax * .50)
 					return 1;
 
-				if (NPC.life > NPC.lifeMax * .30)
+				if (NPC.life > NPC.lifeMax * .35)
 					return 2;
 
 				return 3;
@@ -56,7 +56,7 @@ namespace DimDream.Content.NPCs
             get
             {
 				if (Main.masterMode)
-					return NPC.damage / 3;
+					return NPC.damage / 4;
 
 				if (Main.expertMode)
 					return NPC.damage / 2;
@@ -89,7 +89,7 @@ namespace DimDream.Content.NPCs
 			Vector2 position = NPC.Top + new Vector2(Main.rand.Next(-1200, 1200), -1200 + Main.rand.Next(-100, 100));
 			Vector2 direction = new Vector2(Main.rand.NextFloat(-1, 1), 1);
 
-			float speed = Main.rand.NextFloat(2f, 5f);
+			float speed = Main.rand.NextFloat(2f, 7f);
 			int type = ModContent.ProjectileType<WhiteSpore>();
 			int damage = ProjDamage / 2;
 			var entitySource = NPC.GetSource_FromAI();
@@ -128,7 +128,7 @@ namespace DimDream.Content.NPCs
 				Vector2 direction = positionOffset.SafeNormalize(Vector2.UnitY);
 				Vector2 direction2 = direction.RotatedBy(MathHelper.ToRadians(offset));
 
-				float speed = .3f;
+				float speed = .4f;
 				int type = ModContent.ProjectileType<WhiteSpore>();
 				int damage = ProjDamage;
 				var entitySource = NPC.GetSource_FromAI();
@@ -154,7 +154,7 @@ namespace DimDream.Content.NPCs
 				Vector2 position = NPC.Center;
 				Vector2 direction = new Vector2(1, 0).RotatedBy(MathHelper.Pi * 2 / bullets * i + offset);
 
-				float speed = .55f;
+				float speed = .7f;
 				int type = ModContent.ProjectileType<BlueRing>();
 				int damage = ProjDamage;
 				var entitySource = NPC.GetSource_FromAI();
@@ -170,16 +170,14 @@ namespace DimDream.Content.NPCs
 				if (Counter % frameCount == 0)
 					TopRandomSpore();
 
-				if (!Moving) {
-					if (Counter > 200 && Counter % 30 == 0)
-						BlueLaser();
+				if (Counter > 100 && Counter % 30 == 0)
+					BlueLaser();
 
-					if (Counter == 250)
-						AimedFamiliars(player);
-				}
+				if (Counter == 150)
+					AimedFamiliars(player);
 
 			}
-			if (Counter > 400) {
+			if (Counter > 300) {
                 Counter = 0;
                 TransitionedToStage[0] = true;
             }
@@ -196,8 +194,8 @@ namespace DimDream.Content.NPCs
 				if (Counter % frameCount == 0)
 					TopRandomSpore();
 
-				if (Counter >= 180)
-					switch (Counter % 180) { // Spawns crossed spores perpendicularly
+				if (Counter >= 80)
+					switch (Counter % 80) { // Spawns crossed spores perpendicularly
 						case 0:
 							CrossedSpores(crossedBullets, 45);
 							break;
@@ -210,13 +208,13 @@ namespace DimDream.Content.NPCs
 							break;
 					}
 
-				if (Counter >= 230 && Counter % 45 == 0)
+				if (Counter >= 130 && Counter % 45 == 0)
 					BlueRing(ringBullets);
 
-				if (Counter >= 405 && Counter % 15 == 0)
+				if (Counter >= 305 && Counter % 15 == 0)
 					BlueLaser();
 			}
-			if (Counter >= 500 || !TransitionedToStage[1])
+			if (Counter >= 350 || !TransitionedToStage[1])
             {
                 Counter = 0;
                 TransitionedToStage[1] = true;
@@ -230,13 +228,13 @@ namespace DimDream.Content.NPCs
 				if (Counter % frameCount == 0)
 					TopRandomSpore();
 
-				if (Counter % 300 == 0)
+				if (Counter % 200 == 0)
 					AimedFamiliars(player, 1);
 
-				if (Counter >= 300 && Counter % 15 == 0)
+				if (Counter >= 200 && Counter % 15 == 0)
 					BlueLaser();
 			}
-			if (Counter >= 400 || !TransitionedToStage[2])
+			if (Counter >= 300 || !TransitionedToStage[2])
             {
                 Counter = 0;
                 TransitionedToStage[2] = true;
@@ -253,12 +251,12 @@ namespace DimDream.Content.NPCs
 				if (Counter % frameCount == 0)
 					TopRandomSpore();
 
-				if (Counter >= 320 && Counter <= 490 && Counter % 40 < 20 && Counter % 5 == 0)
+				if (Counter >= 220 && Counter % 40 < 20 && Counter % 5 == 0)
 					PerpendicularSpores((Counter % 40 - 10) * 2 * -1);
-				else if (Counter >= 320 && Counter % 5 == 0)
+				else if (Counter >= 220 && Counter % 5 == 0)
 					PerpendicularSpores((Counter % 40 - 30) * 2);
 
-				if (Counter == 400)
+				if (Counter == 150)
 				{
 					for (int i = 0; i <= 270; i += 90)
 					{
@@ -266,10 +264,10 @@ namespace DimDream.Content.NPCs
 					}
 				}
 
-                if (Counter >= 405 && Counter % 15 == 0)
+                if (Counter >= 280 && Counter % 15 == 0)
                     BlueLaser();
             }
-			if (Counter >= 500 || !TransitionedToStage[3])
+			if (Counter >= 400 || !TransitionedToStage[3])
 			{
 				Counter = 0;
 				TransitionedToStage[3] = true;
@@ -293,7 +291,7 @@ namespace DimDream.Content.NPCs
 			NPC.height = 132;
 			NPC.damage = 30;
 			NPC.defense = 15;
-			NPC.lifeMax = Main.expertMode ? 17500 : 25000;
+			NPC.lifeMax = 25000;
 			NPC.HitSound = SoundID.NPCHit1;
 			NPC.DeathSound = SoundID.NPCDeath1;
 			NPC.knockBackResist = 0f;
@@ -351,10 +349,10 @@ namespace DimDream.Content.NPCs
 			Vector2 offset = new Vector2(113, 113); // Offset to position texture correctly around the boss. Usually half the texture's size
 			float alphaChange = .1f; // How much is the opacity going to change every frame during fade-in/fade-out
 
-			if (Stage == 3 && Counter > 490)
-				spriteBatch.Draw(MagicCircle.Value, NPC.Center - Main.screenPosition - offset, drawColor * ((500 - Counter) % 490 * alphaChange));
-			else if (Stage == 3 && Counter > 310)
-				spriteBatch.Draw(MagicCircle.Value, NPC.Center - Main.screenPosition - offset, drawColor * (Counter % 310 * alphaChange));
+			if (Stage == 3 && Counter > 390)
+				spriteBatch.Draw(MagicCircle.Value, NPC.Center - Main.screenPosition - offset, drawColor * ((500 - Counter) % 390 * alphaChange));
+			else if (Stage == 3 && Counter > 210)
+				spriteBatch.Draw(MagicCircle.Value, NPC.Center - Main.screenPosition - offset, drawColor * (Counter % 210 * alphaChange));
 
 			return true;
 		}
@@ -389,7 +387,7 @@ namespace DimDream.Content.NPCs
                 NPC.netUpdate = true; // Update Destination to every client so they know where the boss should move towards
 			}
 
-            float speed = 5f;
+            float speed = 8f;
             float inertia = 10;
             float slowdownRange = speed * 10;
             Vector2 destNormalized;

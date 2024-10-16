@@ -17,7 +17,6 @@ namespace DimDream.Content.Projectiles
 	// but can spawn additional bullets.
 	internal class ShootingFamiliar : ModProjectile
 	{
-		public int BulletCount { get => Main.expertMode ? 10 : 8; }
 		public static float Pi { get => MathHelper.Pi; }
 		public int BulletType { get => (int)Projectile.ai[0]; }
 		public NPC ParentNPC { get => Main.npc[(int)Projectile.ai[1]]; }
@@ -44,11 +43,12 @@ namespace DimDream.Content.Projectiles
 		}
 
 		public void AimedRingLine() {
-			for (int i = 0; i < BulletCount; i++) {
+			int bulletCount = Main.expertMode ? 28 : 18;
+            for (int i = 0; i < bulletCount; i++) {
 				Vector2 position = Projectile.Center;
 				Vector2 direction = (Target.Center - position).SafeNormalize(Vector2.UnitY).RotatedBy(Main.rand.NextFloat(-Pi / 100, Pi / 100));
 
-				float speed = 4f + (float)i / (BulletCount / 2);
+				float speed = 6f + (float)i / (bulletCount / 2);
 				int type = ModContent.ProjectileType<BlueRing>();
 				var entitySource = Projectile.GetSource_FromAI();
 

@@ -66,10 +66,16 @@ namespace DimDream.Content.Items.Consumables
         // ExampleMod contains a detailed explanation of recipe creation in Content/ExampleRecipes.cs
         public override void AddRecipes() {
 			CreateRecipe()
-				.AddIngredient(ItemID.HallowedBar, 10)
+				.AddIngredient(ItemID.CobaltBar, 10)
                 .AddIngredient(ItemID.SoulofLight, 5)
                 .AddTile(TileID.Anvils)
 				.Register();
-		}
+
+            CreateRecipe()
+                .AddIngredient(ItemID.PalladiumBar, 10)
+                .AddIngredient(ItemID.SoulofLight, 5)
+                .AddTile(TileID.Anvils)
+                .Register();
+        }
 	}
 }
