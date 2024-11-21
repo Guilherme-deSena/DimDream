@@ -1,2 +1,25 @@
-Adds content from the Touhou Project series.
-As of version 0.2.0, adds Chiyuri and Yumemi.
+Dimensional Dream is a boss-focused mod that adds characters and patterns from the Touhou Project series. All characters belong to Team Shanghai Alice.
+This mod is current in alpha. Bugs will happen, so please report any you come across.
+
+To summon Chiyuri, use 10 palladium or cobalt bars and 5 souls of light in an anvil to craft her summon item.
+To summon Yumemi, craft a pocket collider with 10 meteorite bars, 5 souls of sight and 3 fallen stars.
+
+VERSION v0.2.1:
+-- Miniature Hypervessel no longer needs hallowed bars to be crafted, and thus, Chiyuri can be spawned earlier in Hardmode.
+-- Reduced cooldown between Chiyuri's patterns.
+-- Raised both bosses' health in difficulties starting from Expert.
+
+VERSION v0.2.0:
+-- Added Yumemi Okazaki, her summon item and treasure bag.
+-- Added Chiyuri's treasure bag.
+-- Added 6 weapon drops to the treasure bags (4 in Yumemi's, 2 in Chiyuri's).
+
+VERSION v0.1.0:
+-- Initial alpha release.
+-- Added the boss Chiyuri Kitashiragawa and her summon item, Miniature Hypervessel.
+
+
+Yumemi video demonstration: https://youtu.be/i5-ngYmsh5o
+Chiyuri video demonstration: https://youtu.be/ReGCMN8MkTY?si=XU224SE--BEvbwXj
+
+Source code: https://github.com/Guilherme-deSena/DimDream

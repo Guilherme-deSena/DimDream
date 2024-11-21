@@ -15,19 +15,14 @@ namespace DimDream.Content.Projectiles
 {
 	internal class BlueRing : ModProjectile
 	{
-		public bool initialized = false;
 		public Vector2 initialVelocity;
+        public bool Initialized { get; set; } = false;
 
+        public bool ShouldDeaccelerate { get => Projectile.ai[0] == 1f; }
 		public bool FadedIn {
 			get => Projectile.localAI[0] == 1f;
 			set => Projectile.localAI[0] = value ? 1f : 0f;
 		}
-
-		public bool PlayedSpawnSound {
-			get => Projectile.localAI[1] == 1f;
-			set => Projectile.localAI[1] = value ? 1f : 0f;
-		}
-
 
 		public override void SetDefaults() {
 			Projectile.width = 8;
@@ -71,27 +66,18 @@ namespace DimDream.Content.Projectiles
 		}
 
 		public override void AI() {
-			if (!initialized) {
-				initialVelocity = Projectile.velocity;
-				initialized = true;
-			}
+			if (!Initialized) {
+                Initialized = true;
+                initialVelocity = Projectile.velocity;
+
+                // Common practice regarding spawn sounds for projectiles is to put them into AI, playing sounds in the same place where they are spawned
+                // is not multiplayer compatible (either no one will hear it, or only you and not others)
+                SoundEngine.PlaySound(SoundID.Item8, Projectile.position);
+            }
 
 			FadeInAndOut();
 
-			if (!PlayedSpawnSound) {
-				PlayedSpawnSound = true;
-
-				// Common practice regarding spawn sounds for projectiles is to put them into AI, playing sounds in the same place where they are spawned
-				// is not multiplayer compatible (either no one will hear it, or only you and not others)
-				SoundEngine.PlaySound(SoundID.Item8, Projectile.position);
-			}
-
-			if (Projectile.ai[0] == 0)
-				Projectile.velocity = Math.Abs(Projectile.velocity.X) <= Math.Abs(initialVelocity.X) * 5f
-									  || Math.Abs(Projectile.velocity.Y) <= Math.Abs(initialVelocity.Y) * 5f ?
-									  Projectile.velocity * 1.05f :
-									  initialVelocity * 5f;
-			else
+			if (ShouldDeaccelerate)
 				Projectile.velocity = Math.Abs(Projectile.velocity.X) >= Math.Abs(initialVelocity.X) * .4f
 									  || Math.Abs(Projectile.velocity.Y) >= Math.Abs(initialVelocity.Y) * .4f ?
 									  Projectile.velocity * .995f :

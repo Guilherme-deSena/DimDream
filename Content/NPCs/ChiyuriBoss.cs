@@ -24,7 +24,9 @@ namespace DimDream.Content.NPCs
 	[AutoloadBossHead] // This attribute looks for a texture called "ClassName_Head_Boss" and automatically registers it as the NPC boss head icon
 	internal class ChiyuriBoss : ModNPC {
         private int AnimationCount { get; set; } = 0;
-		private Vector2 CenterPosition { get; set; }
+        private bool Initialized { get; set; } = false;
+        private Vector2 ArenaCenter { get; set; }
+        private Vector2 CenterPosition { get; set; }
 		private Vector2 Destination {
 			get => new Vector2(NPC.ai[2], NPC.ai[3]);
 			set {
@@ -70,9 +72,44 @@ namespace DimDream.Content.NPCs
 		}
 
 
-		// bulletType is the type of projectile the familiar shoots. 0 for white spore, 1 for ring line.
-		// bulletCount is how many bullets each burst has (if the projectile uses bursts). Unused for white spore.
-		public void AimedFamiliars(Player player, int bulletType = 0) {
+        public void ArenaDust(Vector2 arenaCenter, int arenaRadius)
+        {
+            int dustCount = 5;
+            for (int i = 0; i < dustCount; i++)
+            {
+                float angle = Main.rand.NextFloat(0, MathHelper.TwoPi);
+                Vector2 position = arenaCenter + new Vector2(0, -arenaRadius).RotatedBy(angle);
+                float speed = 5f;
+                Vector2 velocity = new Vector2(0, -speed).RotatedBy(angle + Pi / 2) * Main.rand.NextFloat(.1f, 1f);
+                int type = DustID.BlueFairy;
+
+                Dust.NewDustPerfect(position, type, velocity, 100, Color.Aqua, 1.5f);
+            }
+        }
+
+        public void PullPlayers(Vector2 arenaCenter, int pullDistance, int fightDistance)
+        {
+            float pullStrength = 3f;
+
+            foreach (Player player in Main.player)
+            {
+                float distance = Vector2.Distance(arenaCenter, player.Center);
+                bool isTooDistant = distance > pullDistance && distance < fightDistance;
+                if (player.active && !player.dead && Vector2.Distance(arenaCenter, player.Center) > pullDistance)
+                {
+                    Vector2 directionToNPC = NPC.Center - player.Center;
+
+                    directionToNPC.Normalize();
+                    directionToNPC *= pullStrength;
+
+                    player.velocity = directionToNPC;
+                }
+            }
+        }
+
+        // bulletType is the type of projectile the familiar shoots. 0 for white spore, 1 for ring line.
+        // bulletCount is how many bullets each burst has (if the projectile uses bursts). Unused for white spore.
+        public void AimedFamiliars(Player player, int bulletType = 0) {
 			for (int i = 0; i < 2; i++) {
 				int side = i == 0 ? 1 : -1;
 				Vector2 direction = new Vector2(side, -0.5f);
@@ -111,7 +148,7 @@ namespace DimDream.Content.NPCs
 					Vector2 direction = new Vector2(1).RotatedBy(MathHelper.ToRadians(rotation - angleOffset * bullets / 2 + i * 5));
 
 					float sideSpeed = side == 1 ? i : bullets + 1 - i;
-					float speed = .2f + sideSpeed / 100;
+					float speed = 2f + sideSpeed / 10;
 					int type = ModContent.ProjectileType<WhiteSpore>();
 					int damage = ProjDamage;
 					var entitySource = NPC.GetSource_FromAI();
@@ -126,9 +163,9 @@ namespace DimDream.Content.NPCs
 				Vector2 positionOffset = new Vector2((float)Math.Sin(Pi / 2 * i) * 100, (float)Math.Cos(Pi / 2 * i) * 100);
 				Vector2 position = NPC.Center + positionOffset;
 				Vector2 direction = positionOffset.SafeNormalize(Vector2.UnitY);
-				Vector2 direction2 = direction.RotatedBy(MathHelper.ToRadians(offset));
+				Vector2 direction2 = direction.RotatedBy(offset);
 
-				float speed = .4f;
+				float speed = 6f;
 				int type = ModContent.ProjectileType<WhiteSpore>();
 				int damage = ProjDamage;
 				var entitySource = NPC.GetSource_FromAI();
@@ -138,7 +175,7 @@ namespace DimDream.Content.NPCs
 		}
 
 		public void BlueLaser() {
-			Vector2 position = NPC.Center + new Vector2(Main.rand.Next(-2500, 2500), 1200);
+			Vector2 position = NPC.Center + new Vector2(Main.rand.Next(-1400, 1400), 1200);
 			Vector2 direction = new Vector2(Main.rand.NextFloat(-0.3f, 0.3f), -1);
 
 			int type = ModContent.ProjectileType<BlueLaser>();
@@ -154,7 +191,7 @@ namespace DimDream.Content.NPCs
 				Vector2 position = NPC.Center;
 				Vector2 direction = new Vector2(1, 0).RotatedBy(MathHelper.Pi * 2 / bullets * i + offset);
 
-				float speed = .7f;
+				float speed = 7f;
 				int type = ModContent.ProjectileType<BlueRing>();
 				int damage = ProjDamage;
 				var entitySource = NPC.GetSource_FromAI();
@@ -189,13 +226,13 @@ namespace DimDream.Content.NPCs
 				int frameCount = Main.expertMode ? 20 : 30;
 				// Bullet count for each pattern depends on difficulty:
 				int ringBullets = Main.expertMode ? 14 : 10;
-				int crossedBullets = Main.expertMode ? 12 : 10;
+				int crossedBullets = Main.expertMode ? 18 : 14;
 
 				if (Counter % frameCount == 0)
 					TopRandomSpore();
 
-				if (Counter >= 80)
-					switch (Counter % 80) { // Spawns crossed spores perpendicularly
+				if (Counter >= 115)
+					switch (Counter % 115) { // Spawns crossed spores perpendicularly
 						case 0:
 							CrossedSpores(crossedBullets, 45);
 							break;
@@ -251,10 +288,6 @@ namespace DimDream.Content.NPCs
 				if (Counter % frameCount == 0)
 					TopRandomSpore();
 
-				if (Counter >= 220 && Counter % 40 < 20 && Counter % 5 == 0)
-					PerpendicularSpores((Counter % 40 - 10) * 2 * -1);
-				else if (Counter >= 220 && Counter % 5 == 0)
-					PerpendicularSpores((Counter % 40 - 30) * 2);
 
 				if (Counter == 150)
 				{
@@ -263,6 +296,16 @@ namespace DimDream.Content.NPCs
 						CrossedSpores(crossedBullets, i);
 					}
 				}
+
+				int start = 220;
+                if (Counter >= start && Counter % 6 == 0)
+                {
+					int bulletCount = 20;
+					float positionInLine = Counter == start ? 0 : (Counter - start) / 3 % (bulletCount*2);
+					float maxOffset = Pi / 2;
+					float offset = maxOffset / bulletCount * Math.Abs(bulletCount - positionInLine);
+                    PerpendicularSpores(offset - maxOffset/2);
+                }
 
                 if (Counter >= 280 && Counter % 15 == 0)
                     BlueLaser();
@@ -365,6 +408,13 @@ namespace DimDream.Content.NPCs
 
 			player = Main.player[NPC.target];
 
+            if (!Initialized) // Stuff that cannot be initialized in SetDefaults()
+            {
+                Initialized = true;
+                NPC.position = player.Center + new Vector2(Main.rand.Next(-500, 500), -1000);
+                ArenaCenter = player.Center;
+            }
+
             if (player.dead)
             {
                 // If the targeted player is dead, flee
@@ -374,14 +424,12 @@ namespace DimDream.Content.NPCs
                 return;
             }
 
-            
-
 			if (Counter <= 1 || !Moving)
 				Counter++;
 
 			// At the first frame of every stage cycle, change the boss' destination
 			if (Counter == 1 && Main.netMode != NetmodeID.MultiplayerClient) {
-                CenterPosition = new Vector2(player.Top.X, player.Top.Y - 320f);
+                CenterPosition = new Vector2(ArenaCenter.X, ArenaCenter.Y - 320f);
                 Vector2 MoveOffset = new Vector2(Main.rand.Next(-200, 200), Main.rand.Next(-50, 50));
 				Destination = CenterPosition + MoveOffset;
                 NPC.netUpdate = true; // Update Destination to every client so they know where the boss should move towards
@@ -409,12 +457,16 @@ namespace DimDream.Content.NPCs
 			}
 
 			NPC.rotation = NPC.velocity.X * 0.05f;
-			NPC.frameCounter++;
-		}
+
+            int arenaRadius = 800; // Actual arena
+            int fightRadius = 4000; // How far from the arena center do players have to be in order to be considered out of combat
+            ArenaDust(ArenaCenter, arenaRadius);
+            PullPlayers(ArenaCenter, arenaRadius, fightRadius);
+        }
 
 		public override void FindFrame(int frameHeight) {
-			int frameSpeed = 20;
-			NPC.frameCounter += 0.5f;
+			int frameSpeed = 10;
+			NPC.frameCounter++;
 
 			// Blinking frames only run once every 5 animation cycles
 			if (NPC.frameCounter > frameSpeed) {

@@ -13,6 +13,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Terraria.GameContent.ItemDropRules;
 using DimDream.Content.Items.Weapons;
 using DimDream.Content.Items.Consumables;
+using System.Diagnostics.Metrics;
 
 namespace DimDream.Content.NPCs
 {
@@ -20,7 +21,8 @@ namespace DimDream.Content.NPCs
     internal class YumemiBoss : ModNPC
     {
         private int AnimationCount { get; set; } = 0;
-        private Vector2 CenterPosition { get; set; }
+        private bool Initialized { get; set; } = false;
+        private Vector2 ArenaCenter { get; set; }
         private Vector2 AimedPosition { get; set; }
         private Vector2 Destination
         {
@@ -32,6 +34,7 @@ namespace DimDream.Content.NPCs
             }
         }
         private bool ShouldDrawLine { get; set; }
+        private bool LineIsBlinking { get; set; }
         private bool Moving { get => NPC.velocity.Length() >= 1; }
         private static float Pi { get => MathHelper.Pi; }
         private int Stage
@@ -74,6 +77,41 @@ namespace DimDream.Content.NPCs
             set => NPC.localAI[3] = value;
         }
 
+        public void ArenaDust(Vector2 arenaCenter, int arenaRadius)
+        {
+            int dustCount = 5;
+            for (int i = 0; i < dustCount; i++)
+            {
+                float angle = Main.rand.NextFloat(0, MathHelper.TwoPi);
+                Vector2 position = arenaCenter + new Vector2(0, -arenaRadius).RotatedBy(angle);
+                float speed = 5f;
+                Vector2 velocity = new Vector2(0, -speed).RotatedBy(angle + Pi/2) * Main.rand.NextFloat(.1f, 1f);
+                int type = DustID.BlueFairy;
+
+                Dust.NewDustPerfect(position, type, velocity, 100, Color.Aqua, 1.5f);
+            }
+        }
+
+        public void PullPlayers(Vector2 arenaCenter, int pullDistance, int fightDistance)
+        {
+            float pullStrength = 3f;
+
+            foreach (Player player in Main.player)
+            {
+                float distance = Vector2.Distance(arenaCenter, player.Center);
+                bool isTooDistant = distance > pullDistance && distance < fightDistance;
+                if (player.active && !player.dead && Vector2.Distance(arenaCenter, player.Center) > pullDistance)
+                {
+                    Vector2 directionToNPC = NPC.Center - player.Center;
+
+                    directionToNPC.Normalize();
+                    directionToNPC *= pullStrength;
+
+                    player.velocity = directionToNPC;
+                }
+            }
+        }
+
         public void SpawnCross(Player player)
         {
             Vector2 position = player.Center;
@@ -99,7 +137,7 @@ namespace DimDream.Content.NPCs
                     float rotation = (MathHelper.Pi / 2) * i;
                     float randomOffset = Main.rand.NextFloat(-Pi / 30, Pi / 30);
                     Vector2 direction = new Vector2(0, -1).RotatedBy(rotation + offset + randomOffset);
-                    float speed = Main.rand.NextFloat(3f, 5f);
+                    float speed = Main.rand.NextFloat(5f, 9f);
 
                     int type = bulletType == 0 ? ModContent.ProjectileType<ReceptacleBullet>() : ModContent.ProjectileType<WhiteSpore>();
                     int damage = (int)(ProjDamage * .6);
@@ -116,7 +154,7 @@ namespace DimDream.Content.NPCs
             {
                 float rotation = (MathHelper.Pi / 10) * i;
                 Vector2 direction = new Vector2(0, -1).RotatedBy(rotation);
-                float speed = Main.rand.NextFloat(4f, 6f);
+                float speed = Main.rand.NextFloat(6f, 10f);
 
                 int type = ModContent.ProjectileType<ReceptacleBullet>();
                 int damage = (int)(ProjDamage * .65);
@@ -134,9 +172,9 @@ namespace DimDream.Content.NPCs
                 int colorNumber = (color.A << 24) | (color.R << 16) | (color.G << 8) | color.B;
                 Vector2 direction = new Vector2(1, 0).RotatedBy(MathHelper.Pi * 2 / bullets * j + directionOffset);
 
-                float speed = 3f;
+                float speed = 5f;
                 int type = bulletType == 0 ? ModContent.ProjectileType<WhiteSpore>() : ModContent.ProjectileType<ReceptacleBullet>();
-                int damage = (int)(NPC.damage * damagePercent);
+                int damage = (int)(ProjDamage * damagePercent);
                 var entitySource = NPC.GetSource_FromAI();
 
                 Projectile.NewProjectile(entitySource, position, direction * speed, type, damage, 0f, Main.myPlayer, 0f, colorNumber);
@@ -158,7 +196,7 @@ namespace DimDream.Content.NPCs
             }
         }
 
-        public void ThrowStuff(Vector2 destination, int bulletType, int bulletCount, float speed = 4f)
+        public void ThrowStuff(Vector2 destination, int bulletType, int bulletCount, float speed = 5f)
         {
             for (int i = 0; i < bulletCount; i++)
             {
@@ -184,32 +222,18 @@ namespace DimDream.Content.NPCs
             Projectile.NewProjectile(entitySource, position, direction * speed, type, damage, 0f, Main.myPlayer, 0f, 0f, 1f);
         }
 
-        public void TopRandomSpore()
-        {
-            Vector2 position = NPC.Top + new Vector2(Main.rand.Next(-1200, 1200), -1200 + Main.rand.Next(-100, 100));
-            Vector2 direction = new(Main.rand.NextFloat(-1, 1), 1);
-
-            float speed = Main.rand.NextFloat(2f, 5f);
-            int type = ModContent.ProjectileType<WhiteSpore>();
-            int damage = ProjDamage / 2;
-            var entitySource = NPC.GetSource_FromAI();
-
-            Projectile.NewProjectile(entitySource, position, direction * speed, type, damage, 0f, Main.myPlayer);
-        }
-
         public void SimpleMovement(Player player)
         {
-            CenterPosition = new Vector2(player.Top.X, player.Top.Y - 320f);
-            Vector2 MoveOffset = new Vector2(Main.rand.Next(-200, 200), Main.rand.Next(-50, 50));
-            Destination = CenterPosition + MoveOffset;
+            Vector2 MoveOffset = new Vector2(Main.rand.Next(-400, 400), Main.rand.Next(-50, 50) - 350f);
+
+            Destination = ArenaCenter + MoveOffset;
             NPC.netUpdate = true; // Update Destination to every client so they know where the boss should move towards
         }
 
-        public void StrafeMovement(Player player, int side)
+        public void StrafeMovement(int side)
         {
-            CenterPosition = new Vector2(player.Top.X, player.Top.Y - 200f);
-            Vector2 MoveOffset = new(400 * side, Main.rand.Next(-150, 150));
-            Destination = CenterPosition + MoveOffset;
+            Vector2 MoveOffset = new(400 * side, Main.rand.Next(-150, 150) - 350f);
+            Destination = ArenaCenter + MoveOffset;
             NPC.netUpdate = true;
         }
 
@@ -217,15 +241,11 @@ namespace DimDream.Content.NPCs
         {
             if (Main.netMode != NetmodeID.MultiplayerClient)
             {
-                if (Counter < 250 && Counter % 60 == 1)
+                if (Counter % 200 == 170)
                 {
-                    int side = Counter % 120 == 1 ? 1 : -1;
-                    StrafeMovement(player, side);
+                    int side = Counter % 400 > 200 ? 1 : -1;
+                    StrafeMovement(side);
                 }
-                /*
-                int frameCount = Main.expertMode ? 20 : 28;
-                if (Counter % frameCount == 0)
-                    TopRandomSpore();*/
 
                 if (Counter == 240)
                     SimpleMovement(player);
@@ -233,11 +253,11 @@ namespace DimDream.Content.NPCs
                 if (Counter >= 60 && Counter <= 180 && Counter % 30 == 0)
                     SpawnCross(player);
 
-                if (Counter >= 450 && Counter % 10 == 0)
+                if (Counter % 200 >= 170 && Counter % 10 == 0)
                 {
                     int bombBullets = Main.expertMode ? 24 : 16;
-                    float offset1 = Counter <= 470 ? 0 : Pi / 3;
-                    float offset2 = Counter % 30 / 10;
+                    float offset1 = Counter % 400 <= 200 ? 0 : Pi / 3;
+                    float offset2 = Counter % 200 % 170 / 10;
                     Vector2 positionOffset = new((float)Math.Sin(offset1 + Pi / 1.5 * offset2) * 100, (float)Math.Cos(offset1 + Pi / 1.5 * offset2) * 100);
                     Vector2 position = NPC.Center + positionOffset;
                     Color color = offset1 == 0 ? Color.GreenYellow : Color.LightSkyBlue;
@@ -247,7 +267,7 @@ namespace DimDream.Content.NPCs
 
             ShouldDrawLine = Counter < 200 ? true : false;
 
-            if (Counter >= 500)
+            if (Counter >= 800)
                 Counter = 0;
         }
 
@@ -255,15 +275,11 @@ namespace DimDream.Content.NPCs
         {
             if (Main.netMode != NetmodeID.MultiplayerClient && TransitionedToStage[1]) // Only server should spawn bullets
             {   
-                if (Counter % 240 == 1)
+                if (Counter % 240 == 0)
                 {
-                    int side = Counter % 480 == 0 ? 1 : -1;
-                    StrafeMovement(player, side);
+                    int side = Counter % 480 == 0 ? -1 : 1;
+                    StrafeMovement(side);
                 }
-                /*
-                int frameCount = Main.expertMode ? 12 : 20;
-                if (Counter % frameCount == 0)
-                    TopRandomSpore();*/
 
                 if (Counter >= 60 && Counter <= 180 && Counter % 30 == 0)
                     SpawnCross(player);
@@ -284,7 +300,7 @@ namespace DimDream.Content.NPCs
 
             ShouldDrawLine = Counter < 200 ? true : false;
 
-            if (Counter >= 900 || !TransitionedToStage[1])
+            if (Counter >= 1080 || !TransitionedToStage[1])
             {
                 Counter = 0;
                 TransitionedToStage[1] = true;
@@ -297,30 +313,26 @@ namespace DimDream.Content.NPCs
             {
                 if (Counter == 90)
                     SimpleMovement(player);
-                /*
-                int frameCount = Main.expertMode ? 20 : 28;
-                if (Counter % frameCount == 0)
-                    TopRandomSpore();*/
 
                 if (Counter >= 120 && Counter <= 240 && Counter % 30 == 0)
                     SpawnCross(player);
 
-                if (Counter == 1)
+                if (Counter == 490)
                     AimedPosition = player.Center;
 
-                if (Counter % 10 == 0 && Counter <= 90)
+                if (Counter % 10 == 0 && Counter >= 500)
                 {
                     int bulletType = Counter % 20 == 0 ? ModContent.ProjectileType<ReceptacleBullet>() : ModContent.ProjectileType<WhiteSpore>();
                     int minBullets = Main.expertMode ? 4 : 2;
                     int bulletCount = minBullets + 2 * ((int)Counter % 30 / 5);
-                    ThrowStuff(AimedPosition, bulletType, bulletCount, 10f);
+                    ThrowStuff(AimedPosition, bulletType, bulletCount, 12f);
                 }
 
-                if (Counter >= 440 && Counter % 10 == 0)
+                if (Counter % 200 >= 170 && Counter % 10 == 0)
                 {
                     int bombBullets = Main.expertMode ? 32 : 24;
-                    float offset1 = Counter < 470 ? 0 : Pi / 3;
-                    float offset2 = Counter % 30 / 10;
+                    float offset1 = Counter % 400 <= 200 ? 0 : Pi / 3;
+                    float offset2 = Counter % 200 % 170 / 10;
                     Vector2 positionOffset = new((float)Math.Sin(offset1 + Pi / 1.5 * offset2) * 100, (float)Math.Cos(offset1 + Pi / 1.5 * offset2) * 100);
                     Vector2 position = NPC.Center + positionOffset;
 
@@ -328,9 +340,10 @@ namespace DimDream.Content.NPCs
                 }
             }
 
-            ShouldDrawLine = Counter < 250 ? true : false;
+            LineIsBlinking = Counter > 400 && Counter < 490;
+            ShouldDrawLine = Counter < 250 || LineIsBlinking;
 
-            if (Counter >= 500 || !TransitionedToStage[2])
+            if (Counter >= 600 || !TransitionedToStage[2])
             {
                 Counter = 0;
                 TransitionedToStage[2] = true;
@@ -343,10 +356,6 @@ namespace DimDream.Content.NPCs
             {
                 if (Counter == 1)
                     SimpleMovement(player);
-                /*
-                int frameCount = Main.expertMode ? 12 : 20;
-                if (Counter % frameCount == 0)
-                    TopRandomSpore();*/
                 
                 if (Counter == 190)
                     AimedPosition = player.Center;
@@ -362,13 +371,14 @@ namespace DimDream.Content.NPCs
                 if (Counter >= 300 && Counter % 5 == 0)
                 {
                     float frame = (Counter % 300) / 10;
-                    float speed = 2f + frame * 1f;
+                    float speed = 4f + frame * 2f;
                     float offset = (Pi / 36) * frame;
                     SpiralCircle(speed, offset);
                 }
             }
 
-            ShouldDrawLine = Counter < 190 ? true : false;
+            LineIsBlinking = Counter > 100 && Counter < 190;
+            ShouldDrawLine = LineIsBlinking;
 
             if (Counter >= 350 || !TransitionedToStage[3])
             {
@@ -425,7 +435,7 @@ namespace DimDream.Content.NPCs
             NPC.height = 142;
             NPC.damage = 45;
             NPC.defense = 22;
-            NPC.lifeMax = 34000;
+            NPC.lifeMax = Main.expertMode ? 27000 : 34000;
             NPC.HitSound = SoundID.NPCHit1;
             NPC.DeathSound = SoundID.NPCDeath1;
             NPC.knockBackResist = 0f;
@@ -440,7 +450,7 @@ namespace DimDream.Content.NPCs
 
             if (!Main.dedServ)
             {
-                Music = MusicID.Boss2;
+                Music = MusicLoader.GetMusicSlot(Mod, "Assets/Music/StrawberryCrisis");
             }
         }
 
@@ -478,13 +488,25 @@ namespace DimDream.Content.NPCs
             return true;
         }
 
+        public override bool CheckActive()
+        {
+            foreach (Player player in Main.player)
+            {
+                if (!player.dead && Vector2.Distance(player.Center, NPC.Center) < 8000)
+                    return false;
+            }
+
+            return true;
+        }
+
         public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
             if (ShouldDrawLine)
             {
+                Color color = LineIsBlinking && Counter % 20 < 10 ? Color.Red : Color.Aqua;
                 Vector2 npcPosition = NPC.Center - Main.screenPosition;
                 Vector2 playerPosition = Main.player[NPC.target].Center - Main.screenPosition;
-                DrawLine(spriteBatch, npcPosition, playerPosition, Color.Aqua, 4);
+                DrawLine(spriteBatch, npcPosition, playerPosition, color, 4);
             }
 
             return true;
@@ -512,12 +534,20 @@ namespace DimDream.Content.NPCs
 
             player = Main.player[NPC.target];
 
+            if (!Initialized) // Stuff that cannot be initialized in SetDefaults()
+            {
+                Initialized = true;
+                NPC.position = player.Center + new Vector2(Main.rand.Next(-500, 500), -1000);
+                ArenaCenter = player.Center;
+            }
+
             if (player.dead)
             {
                 NPC.velocity.Y -= 0.04f;
                 NPC.EncourageDespawn(10);
                 return;
             }
+
 
             Counter++;
 
@@ -542,6 +572,11 @@ namespace DimDream.Content.NPCs
                 case 3: Stage3(player); break;
                 case 4: Stage4(player); break;
             }
+
+            int arenaRadius = 800; // Actual arena
+            int fightRadius = 4000; // How far from the arena center do players have to be in order to be considered out of combat
+            ArenaDust(ArenaCenter, arenaRadius);
+            PullPlayers(ArenaCenter, arenaRadius, fightRadius);
         }
 
         public override void FindFrame(int frameHeight)

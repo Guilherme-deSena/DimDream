@@ -95,11 +95,12 @@ namespace DimDream.Content.Projectiles
 				SoundEngine.PlaySound(SoundID.Item8, Projectile.position);
 			}
 
+			/*
 			if (ShouldAccelerate)
 				Projectile.velocity = Math.Abs(Projectile.velocity.X) < Math.Abs(initialVelocity.X) * 10
 									  || Math.Abs(Projectile.velocity.Y) < Math.Abs(initialVelocity.Y) * 10 ?
 									  Projectile.velocity * 1.5f :
-									  initialVelocity * 10;
+									  initialVelocity * 10;*/
 
 			// If the sprite points upwards, this will make it point towards the move direction (for other sprite orientations, change MathHelper.PiOver2)
 			Projectile.rotation = Projectile.velocity.ToRotation();

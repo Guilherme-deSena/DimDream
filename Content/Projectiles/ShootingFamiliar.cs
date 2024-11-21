@@ -35,11 +35,11 @@ namespace DimDream.Content.Projectiles
 			Vector2 position = Projectile.Center;
 			Vector2 direction = (Target.Center - position).SafeNormalize(Vector2.UnitY).RotatedBy(Main.rand.NextFloat(-Pi / 100, Pi / 100));
 
-			float speed = .7f;
+			float speed = 7f;
 			int type = ModContent.ProjectileType<WhiteSpore>();
 			var entitySource = Projectile.GetSource_FromAI();
 
-			Projectile.NewProjectile(entitySource, position, direction* speed, type, Projectile.damage, 0f, Main.myPlayer, 1f);
+			Projectile.NewProjectile(entitySource, position, direction* speed, type, Projectile.damage, 0f, Main.myPlayer);
 		}
 
 		public void AimedRingLine() {
