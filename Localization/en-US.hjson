@@ -10,6 +10,10 @@ Mods: {
 				DisplayName: Yumemi Okazaki
 				SpawnInfo: Use a [i:DimDream/PocketCollider] at any time or place.
 			}
+
+			OrinBoss.DisplayName: Orin Boss
+			EvilSpirit.DisplayName: Evil Spirit
+			OrinEvilSpirit.DisplayName: Orin Evil Spirit
 		}
 
 		Items: {
@@ -97,6 +101,9 @@ Mods: {
 			ArcaneFragment.DisplayName: Arcane Fragment
 			CrossWeapon.DisplayName: Cross
 			CrossBoss.DisplayName: Cross
+			LargeBallRed.DisplayName: Large Ball Red
+			LargeBall.DisplayName: Large Ball
+			Rice.DisplayName: Rice
 		}
 
 		Buffs: {
