@@ -45,8 +45,8 @@ namespace DimDream.Content.Projectiles
         {
             Projectile.width = 10;
             Projectile.height = 10;
-            DrawOffsetX = -2;
-            DrawOriginOffsetY = -7;
+            DrawOffsetX = -3;
+            DrawOriginOffsetY = -8;
             Projectile.alpha = 255;
             Projectile.timeLeft = 350;
             Projectile.friendly = false;
@@ -100,10 +100,10 @@ namespace DimDream.Content.Projectiles
                 SoundEngine.PlaySound(SoundID.Item8, Projectile.position);
             }
 
-            float maxSpeed = 7f;
+            float maxSpeed = 10f;
             if (Behavior == 1f && Projectile.velocity.Length() < maxSpeed)
             {
-                float acceleration = .03f;
+                float acceleration = .1f;
                 Projectile.velocity *= 1f + acceleration / Projectile.velocity.Length();
             }
 

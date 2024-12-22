@@ -13,13 +13,19 @@ using Microsoft.Xna.Framework;
 
 namespace DimDream.Content.Projectiles
 {
-    internal class LargeBallRed : ModProjectile
+    public class Diamond : ModProjectile
     {
-        public override string Texture => "DimDream/Content/Projectiles/LargeBallRed";
         private float Behavior // Set to 1 when creating the proj for speed up behavior
         {
             get => Projectile.ai[0];
             set => Projectile.ai[0] = value;
+        }
+
+        private float SpriteBehavior
+        {
+            get => Projectile.ai[1];
+            set => Projectile.ai[1] = value;
+
         }
 
         private bool FadedIn
@@ -40,15 +46,19 @@ namespace DimDream.Content.Projectiles
             set => Projectile.localAI[2] = value;
         }
 
+        public override void SetStaticDefaults()
+        {
+            Main.projFrames[Projectile.type] = 2;
+        }
 
         public override void SetDefaults()
         {
-            Projectile.width = 10;
-            Projectile.height = 10;
-            DrawOffsetX = -5;
-            DrawOriginOffsetY = -5;
+            Projectile.width = 8;
+            Projectile.height = 8;
+            DrawOffsetX = -2;
+            DrawOriginOffsetY = -7;
             Projectile.alpha = 255;
-            Projectile.timeLeft = 350;
+            Projectile.timeLeft = 250;
             Projectile.friendly = false;
             Projectile.hostile = true;
             Projectile.tileCollide = false;
@@ -91,7 +101,6 @@ namespace DimDream.Content.Projectiles
 
         public override void AI()
         {
-            FadeInAndOut();
             Counter++;
 
             if (!PlayedSpawnSound)
@@ -100,21 +109,28 @@ namespace DimDream.Content.Projectiles
                 SoundEngine.PlaySound(SoundID.Item8, Projectile.position);
             }
 
-            float maxSpeed = 6f;
-            if (Behavior == 1f && Counter > 20 && Projectile.velocity.Length() < maxSpeed)
+            float maxSpeed = 12f;
+            if (Behavior == 1f && Projectile.velocity.Length() < maxSpeed && Projectile.timeLeft <= 150)
             {
-                float acceleration = .05f;
+                float acceleration = .1f;
                 Projectile.velocity *= 1f + acceleration / Projectile.velocity.Length();
             }
 
-        // If the sprite points upwards, this will make it point towards the move direction (for other sprite orientations, change MathHelper.PiOver2)
-        Projectile.rotation = Projectile.velocity.ToRotation();
+            Visuals();
+        }
+
+        private void Visuals()
+        {
+            if (SpriteBehavior == 1f || (SpriteBehavior == 2f && Projectile.velocity.Length() <= .1f))
+                Projectile.frame = 1;
+            else
+                Projectile.frame = 0;
+
+            FadeInAndOut();
+
+            // If the sprite points upwards, this will make it point towards the move direction (for other sprite orientations, change MathHelper.PiOver2)
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
             Projectile.spriteDirection = Projectile.direction;
         }
-    }
-
-    internal class LargeBallBlue : LargeBallRed
-    {
-        public override string Texture => "DimDream/Content/Projectiles/LargeBallBlue";
     }
 }

@@ -14,17 +14,16 @@ using Terraria.GameContent.ItemDropRules;
 using DimDream.Content.Items.Weapons;
 using DimDream.Content.Items.Consumables;
 using System.Diagnostics.Metrics;
-using ExampleMod.Content.NPCs.MinionBoss;
+using DimDream.Content.BossBars;
 
 namespace DimDream.Content.NPCs
 {
     [AutoloadBossHead] // This attribute looks for a texture called "ClassName_Head_Boss" and automatically registers it as the NPC boss head icon
     internal class OrinBoss : ModNPC
     {
-        public int ShouldJumpAtFrame { get; set; } = -1;
         private bool Initialized { get; set; } = false;
+        private int Inverter { get; set; } = 1;
         private Vector2 ArenaCenter { get; set; }
-        private Vector2 AimedPosition { get; set; }
         private Vector2 Destination
         {
             get => new(NPC.ai[2], NPC.ai[3]);
@@ -35,19 +34,34 @@ namespace DimDream.Content.NPCs
             }
         }
         private bool Moving { get => NPC.velocity.Length() > .5; }
-        private static float Pi { get => MathHelper.Pi; }
+        private static float Pi { get => MathHelper.Pi; } // Shorter way to write Pi because I'm too lazy to write Mathhelper everytime
         private int Stage
         { // Stage is decided by the boss' health percentage
             get
             {
-                if (NPC.life > NPC.lifeMax * .85)
+                if (GoingToStage <= 0)
                     return 0;
 
-                return 0;
+                if (GoingToStage <= 1)
+                    return 1;
+
+                if (NPC.life > NPC.lifeMax * .8f)
+                    return 2;
+
+                if (NPC.life > NPC.lifeMax * .5f)
+                    return 3;
+
+                return 4;
             }
         }
-        // This will be checked to prevent starting a stage mid-pattern:
-        private bool[] TransitionedToStage { get; set; } = new bool[5];
+        private int GoingToStage // This will be checked to prevent starting a stage mid-pattern
+        {
+            get => (int)NPC.localAI[2];
+            set => NPC.localAI[2] = value;
+        }
+        private int RevivingIntoStage { get; set; } = 0;
+        private float SavedRandom { get; set; } = 0; // Used to keep a random float between frames
+        private Vector2 SavedPosition { get; set; } // Used to keep a position between frames
         private int ProjDamage
         {
             get
@@ -61,9 +75,9 @@ namespace DimDream.Content.NPCs
                 return NPC.damage;
             }
         }
-        private float Counter
+        private int Counter
         {
-            get => NPC.localAI[3];
+            get => (int)NPC.localAI[3];
             set => NPC.localAI[3] = value;
         }
 
@@ -83,7 +97,7 @@ namespace DimDream.Content.NPCs
             NPC.height = 78;
             NPC.damage = 45;
             NPC.defense = 22;
-            NPC.lifeMax = Main.expertMode ? 27000 : 34000;
+            NPC.lifeMax = Main.expertMode ? 5000 : 8000;
             NPC.HitSound = SoundID.NPCHit1;
             NPC.DeathSound = SoundID.NPCDeath1;
             NPC.knockBackResist = 0f;
@@ -93,7 +107,7 @@ namespace DimDream.Content.NPCs
             NPC.SpawnWithHigherTime(30);
             NPC.boss = true;
             NPC.npcSlots = 10f;
-
+            NPC.BossBar = ModContent.GetInstance<OrinBossBar>();
             NPC.aiStyle = -1;
 
             if (!Main.dedServ)
@@ -126,7 +140,7 @@ namespace DimDream.Content.NPCs
             // Sets the description of this NPC that is listed in the bestiary
             bestiaryEntry.Info.AddRange([
                 new MoonLordPortraitBackgroundProviderBestiaryInfoElement(), // Plain black background
-				new FlavorTextBestiaryInfoElement("Captain of the Probability Space Hypervessel, looking to test the magical powers in the world of Terraria so she can write her thesis.")
+				new FlavorTextBestiaryInfoElement("Yumemi, Captain of the Probability Space Hypervessel, looking to test the magical powers in the world of Terraria so she can write her thesis.")
             ]);
         }
 
@@ -147,6 +161,19 @@ namespace DimDream.Content.NPCs
             return true;
         }
 
+        public override bool CheckDead()
+        {
+            if (GoingToStage < 2)
+            {
+                GoingToStage = 2;
+                NPC.life = 1;
+                NPC.dontTakeDamage = true;
+                NPC.lifeMax = 60000;
+                return false;
+            }
+
+            return true;
+        }
         public override void AI()
         {
             // This should almost always be the first code in AI() as it is responsible for finding the proper player target
@@ -189,11 +216,22 @@ namespace DimDream.Content.NPCs
             if (Moving)
                 NPC.spriteDirection = NPC.velocity.X < 0 ? 1 : -1;
 
-            switch (Stage)
-            {
-                case 0:
-                    Stage1(player); break;
-            }
+            if (NPC.dontTakeDamage && GoingToStage >= 1 && NPC.life < NPC.lifeMax)
+                Revive(RevivingIntoStage);
+            else
+                switch (Stage)
+                {
+                    case 0:
+                        Stage0(player); break;
+                    case 1:
+                        Stage1(player); break;
+                    case 2:
+                        Stage2(player); break;
+                    case 3:
+                        Stage3(player); break;
+                    case 4:
+                        Stage4(player); break;
+                }
 
 
             int arenaRadius = 800; // Actual arena
@@ -236,12 +274,28 @@ namespace DimDream.Content.NPCs
         }
 
 
+        public void PrePatternDust(int distance)
+        {
+            int dustCount = 2;
+            for (int i = 0; i < dustCount; i++)
+            {
+                float angle = Main.rand.NextFloat(MathHelper.TwoPi);
+                Vector2 position = new(NPC.Center.X + MathF.Sin(angle) * distance, NPC.Center.Y - MathF.Cos(angle) * distance);
+                float speed = 20f;
+                Vector2 velocity = new(MathF.Sin(angle), -MathF.Cos(angle));
+                int type = 285;
+
+                Dust d = Dust.NewDustPerfect(position, type, -velocity * speed, 100, default, 4f);
+                d.noGravity = true;
+            }
+        }
+
         public void ArenaDust(Vector2 arenaCenter, int arenaRadius)
         {
             int dustCount = 5;
             for (int i = 0; i < dustCount; i++)
             {
-                float angle = Main.rand.NextFloat(0, MathHelper.TwoPi);
+                float angle = Main.rand.NextFloat(MathHelper.TwoPi);
                 Vector2 position = arenaCenter + new Vector2(0, -arenaRadius).RotatedBy(angle);
                 float speed = 5f;
                 Vector2 velocity = new Vector2(0, -speed).RotatedBy(angle + Pi / 2) * Main.rand.NextFloat(.1f, 1f);
@@ -250,6 +304,7 @@ namespace DimDream.Content.NPCs
                 Dust.NewDustPerfect(position, type, velocity, 100, Color.Aqua, 1.5f);
             }
         }
+
 
         public void PullPlayers(Vector2 arenaCenter, int pullDistance, int fightDistance)
         {
@@ -271,12 +326,32 @@ namespace DimDream.Content.NPCs
             }
         }
 
-        public void SpawnEvilSpirit(Vector2 position)
+        public void SpawnCircleSpirit(Vector2 position)
         {
-            int type = ModContent.NPCType<OrinEvilSpirit>();
+            int type = ModContent.NPCType<OrinEvilSpiritRed>();
             var entitySource = NPC.GetSource_FromAI();
 
-            NPC.NewNPC(entitySource, (int)position.X, (int)position.Y, type, NPC.whoAmI);
+            OrinEvilSpiritRed spirit = (OrinEvilSpiritRed)NPC.NewNPCDirect(entitySource, (int)position.X, (int)position.Y, type, NPC.whoAmI).ModNPC;
+            spirit.ParentIndex = NPC.whoAmI;
+        }
+
+        public void SpawnBurstSpirits(int distance, float offset, int spiritCount, int timeLeft)
+        {
+            for (int i = 0; i < spiritCount; i++)
+            {
+                float angle = offset + MathHelper.TwoPi / spiritCount * i;
+                Vector2 position = new(NPC.Center.X + MathF.Sin(angle) * distance, NPC.Center.Y - MathF.Cos(angle) * distance);
+                Vector2 velocity = new Vector2(0, -1).RotatedBy(angle);
+                float speed = .1f;
+                int type = ModContent.NPCType<OrinEvilSpiritBlue>();
+                var entitySource = NPC.GetSource_FromAI();
+
+                NPC spirit = NPC.NewNPCDirect(entitySource, position, type, NPC.whoAmI, timeLeft);
+                spirit.velocity = -velocity * speed;
+                
+                OrinEvilSpiritBlue s = (OrinEvilSpiritBlue)spirit.ModNPC;
+                s.ParentIndex = NPC.whoAmI;
+            }
         }
 
         public void RiceCircle(int distance, float offset, int riceCount)
@@ -293,6 +368,24 @@ namespace DimDream.Content.NPCs
                 int damage = ProjDamage;
 
                 Projectile.NewProjectile(entitySource, positionOffset, velocity * speed, type, damage, 0f, Main.myPlayer, 1f);
+            }
+        }
+
+        public void Circle(Vector2 center, float distance, float offset, float speed, int count, int type, int timeLeft = -1, int color = 0)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                float angle = offset + MathHelper.TwoPi / count * i;
+                Vector2 positionOffset = new(center.X + MathF.Sin(angle) * distance, center.Y - MathF.Cos(angle) * distance);
+                Vector2 velocity = new Vector2(0, -1).RotatedBy(angle);
+
+                var entitySource = NPC.GetSource_FromAI();
+                int damage = ProjDamage;
+
+                Projectile p = Projectile.NewProjectileDirect(entitySource, positionOffset, velocity * speed, type, damage, 0f, Main.myPlayer, 1f, color);
+                
+                if (timeLeft >= 0)
+                    p.timeLeft = timeLeft;
             }
         }
 
@@ -314,6 +407,22 @@ namespace DimDream.Content.NPCs
             NPC.netUpdate = true;
         }
 
+        public void AlternatingJump(int side)
+        {
+            Vector2 direction = new(500 * side, 100);
+
+            Destination = NPC.Center + direction;
+            NPC.netUpdate = true;
+        }
+
+        public void RunFromArena(int side)
+        {
+            Vector2 direction = new(3000 * side, 0);
+
+            Destination = ArenaCenter + direction;
+            NPC.netUpdate = true;
+        }
+        /*
         public void AltJump()
         {
             Vector2 dest = new Vector2(Main.rand.Next(-2, 2) * 300, -350 + Main.rand.Next(100)) + ArenaCenter;
@@ -323,7 +432,19 @@ namespace DimDream.Content.NPCs
 
             Destination = toDestinationNormalized * travelDistance + NPC.Center;
             NPC.netUpdate = true;
+        }*/
+
+        public void Revive(int stage)
+        {
+            NPC.life = Math.Min(NPC.life + NPC.lifeMax / 100, NPC.lifeMax);
+
+            if (NPC.life >= NPC.lifeMax)
+            {
+                NPC.dontTakeDamage = false;
+                Counter = 0;
+            }
         }
+
         public void Stage0(Player player) 
         {
             if (Main.netMode != NetmodeID.MultiplayerClient) // Only server should spawn bullets and change destination
@@ -341,7 +462,7 @@ namespace DimDream.Content.NPCs
                     int spiritCount = 0;
                     foreach (var otherNPC in Main.ActiveNPCs)
                     {
-                        if (otherNPC.type == ModContent.NPCType<OrinEvilSpirit>())
+                        if (otherNPC.type == ModContent.NPCType<OrinEvilSpiritRed>())
                             spiritCount++;
                     }
 
@@ -357,34 +478,166 @@ namespace DimDream.Content.NPCs
                         {
                             float angle = MathHelper.TwoPi / 3 * i;
                             Vector2 position = new Vector2(MathF.Sin(angle) * 50, MathF.Cos(angle) * 50) + NPC.Center;
-                            SpawnEvilSpirit(position);
+                            SpawnCircleSpirit(position);
                         }
                 }
+
+                if (Counter >= 1000)
+                    RunFromArena(1);
             }
 
-            if (Counter >= 800)
-                Counter = 0;
+            if (!NPC.dontTakeDamage)
+                NPC.dontTakeDamage = true;
+
+            if (Counter >= 1100)
+                GoingToStage = 1;
         }
 
         public void Stage1(Player player)
         {
-            if (Main.netMode != NetmodeID.MultiplayerClient && TransitionedToStage[1])
+            if (Main.netMode != NetmodeID.MultiplayerClient)
             {
                 if (Counter == 1)
                     GoToDefaultPosition();
 
-                if (Counter > 600 & Counter % 10 == 0)
+                if (Counter > 400 && Counter % 10 == 0 && Counter < 900)
                 {
-                    float angle = Counter <= 700 ? 0 : MathF.Sin(Counter - 700) + Main.rand.NextFloat(Pi/20);
-                    int distance = (int)Math.Abs(850 - Counter);
-                    RiceCircle(distance, angle, 24);
+                    float angle = Counter <= 500 ? 0 : MathF.Sin(Counter - 500) + Main.rand.NextFloat(Pi/20);
+                    int distance = (int)Math.Abs(650 - Counter);
+                    int type = ModContent.ProjectileType<Rice>();
+
+                    Circle(NPC.Center, distance, angle, .5f, 16, type);
+
+                    angle = MathF.Sin(Counter - 400) + Main.rand.NextFloat(Pi / 20);
+                    if (Counter < 650 && Counter % 20 == 0)
+                        SpawnBurstSpirits(distance, angle, 5, 1200 - Counter);
                 }
             }
 
-            if (Counter >= 1080 || !TransitionedToStage[1])
+            if (Counter > 300 && Counter < 405)
+                PrePatternDust(500 - Counter % 300 * 5);
+
+            if (Counter >= 1080)
             {
                 Counter = 0;
-                TransitionedToStage[1] = true;
+                NPC.dontTakeDamage = false;
+            }
+        }
+
+
+        public void Stage2(Player player)
+        {
+            if (Main.netMode != NetmodeID.MultiplayerClient)
+            {
+                if (Counter == 1)
+                    GoToDefaultPosition();
+
+                if (Counter >= 200 && Counter % 5 == 0 && Counter <= 320)
+                {
+                    int start = Counter - 200;
+                    float distance = start / 2;
+                    int timeLeft = 550 - start * 3;
+                    float offset = Pi / 200 * Math.Abs(60 - start) * Inverter;
+                    int type = ModContent.ProjectileType<Diamond>();
+
+                    Circle(NPC.Center, distance, offset, .01f, 20, type, timeLeft);
+                }
+            }
+
+            if (Counter >= 320)
+            {
+                Counter = 0;
+                Inverter *= -1;
+            }
+        }
+
+        public void Stage3(Player player)
+        {
+            if (Main.netMode != NetmodeID.MultiplayerClient && GoingToStage >= 3)
+            {
+                if (Counter == 1)
+                    GoToDefaultPosition();
+
+                if (Counter >= 50 && Counter % 5 == 0 && Counter <= 175)
+                {
+                    int start = Counter - 50;
+                    float distance = start;
+                    int timeLeft = 550 - start * 3;
+                    float speed = .01f;
+                    int count = Counter < 150 ? 15 : 30;
+                    int type = ModContent.ProjectileType<Diamond>();
+                    SavedRandom += Counter < 150 ? Main.rand.NextFloat(-Pi / 30, Pi / 30) + Pi / 100 * Inverter 
+                        : Pi / 100 * -Inverter;
+
+                    Circle(NPC.Center, distance, SavedRandom, speed, count, type, timeLeft, 1);
+                }
+            }
+
+            if (GoingToStage < 3) 
+            {
+                GoingToStage = 3;
+                Counter = 0;
+                Inverter = 1;
+            }
+
+            if (Counter >= 300)
+            {
+                SavedRandom = 0;
+                Counter = -100;
+                Inverter *= -1;
+            }
+        }
+
+        public void Stage4(Player player)
+        {
+            if (Main.netMode != NetmodeID.MultiplayerClient && GoingToStage >= 4)
+            {
+                if (Counter == 1)
+                    GoToDefaultPosition();
+
+                if (Counter % 60 == 0 && Counter <= 420)
+                {
+                    AlternatingJump(Inverter);
+                    if (Counter % 120 == 60)
+                        Inverter *= -1;
+                }
+
+                if (Counter >= 120 && Counter % 10 == 0 && Counter % 60 <= 30 && Counter <= 520)
+                {
+                    if (Counter % 60 == 0)
+                        SavedPosition = new(NPC.Center.X, NPC.Center.Y);
+
+                    int start = Counter % 60;
+                    float distance = 50 + start * 5;
+                    int timeLeft = 550 - start;
+                    float speed = .01f;
+                    int count = 18;
+                    int type = ModContent.ProjectileType<Diamond>();
+                    SavedRandom += Main.rand.NextFloat(-Pi / 30, Pi / 30) + Pi / 100 * Inverter;
+
+                    Circle(SavedPosition, distance, SavedRandom, speed, count, type, timeLeft, 2);
+                }
+
+                if (Counter == 480)
+                {
+                    Inverter *= -1;
+                    RunFromArena(Inverter);
+                }
+
+                if (Counter >= 640)
+                    GoToDefaultPosition();
+            }
+
+            if (GoingToStage < 4)
+            {
+                GoingToStage = 4;
+                Counter = -100;
+                Inverter = -1;
+            }
+
+            if (Counter >= 1100)
+            {
+                Counter = 0;
             }
         }
     }

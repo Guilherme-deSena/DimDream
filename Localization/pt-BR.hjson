@@ -14,6 +14,8 @@ Mods: {
 			// OrinBoss.DisplayName: Orin Boss
 			// EvilSpirit.DisplayName: Evil Spirit
 			// OrinEvilSpirit.DisplayName: Orin Evil Spirit
+			// OrinEvilSpiritBlue.DisplayName: Orin Evil Spirit Blue
+			// OrinEvilSpiritRed.DisplayName: Orin Evil Spirit Red
 		}
 
 		Items: {
@@ -78,6 +80,11 @@ Mods: {
 				DisplayName: Bomba Arcana
 				Tooltip: Atira uma bomba que transcende o próprio tempo e faz fragmentos serem jogados de novo e de novo
 			}
+
+			CorpseCoffin: {
+				// DisplayName: Corpse Coffin
+				// Tooltip: ""
+			}
 		}
 
 		Projectiles: {
@@ -104,6 +111,10 @@ Mods: {
 			// LargeBallRed.DisplayName: Large Ball Red
 			// LargeBall.DisplayName: Large Ball
 			// Rice.DisplayName: Rice
+			// LargeBallBlue.DisplayName: Large Ball Blue
+			// Diamond.DisplayName: Diamond
+			// DiamondBlue.DisplayName: Diamond Blue
+			// DiamondRed.DisplayName: Diamond Red
 		}
 
 		Buffs: {
