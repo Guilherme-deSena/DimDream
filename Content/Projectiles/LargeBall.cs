@@ -21,6 +21,13 @@ namespace DimDream.Content.Projectiles
             get => Projectile.ai[0];
             set => Projectile.ai[0] = value;
         }
+        public int ParentIndex
+        {
+            get => (int)Projectile.ai[2];
+            set => Projectile.ai[2] = value;
+        }
+        public bool HasParent => ParentIndex > -1;
+        public int ParentStageHelper { get; set; }
 
         private bool FadedIn
         {
@@ -28,7 +35,7 @@ namespace DimDream.Content.Projectiles
             set => Projectile.localAI[0] = value ? 1f : 0f;
         }
 
-        private bool PlayedSpawnSound
+        private bool Initialized
         {
             get => Projectile.localAI[1] == 1f;
             set => Projectile.localAI[1] = value ? 1f : 0f;
@@ -91,14 +98,18 @@ namespace DimDream.Content.Projectiles
 
         public override void AI()
         {
+            if (!Initialized)
+            {
+                Initialized = true;
+                ParentStageHelper = (int)Main.npc[ParentIndex].localAI[2];
+                SoundEngine.PlaySound(SoundID.Item8, Projectile.position);
+            }
+
+            Despawn();
+
             FadeInAndOut();
             Counter++;
 
-            if (!PlayedSpawnSound)
-            {
-                PlayedSpawnSound = true;
-                SoundEngine.PlaySound(SoundID.Item8, Projectile.position);
-            }
 
             float maxSpeed = 6f;
             if (Behavior == 1f && Counter > 20 && Projectile.velocity.Length() < maxSpeed)
@@ -110,6 +121,19 @@ namespace DimDream.Content.Projectiles
         // If the sprite points upwards, this will make it point towards the move direction (for other sprite orientations, change MathHelper.PiOver2)
         Projectile.rotation = Projectile.velocity.ToRotation();
             Projectile.spriteDirection = Projectile.direction;
+        }
+
+        public bool Despawn()
+        {
+            NPC parent = Main.npc[ParentIndex];
+            if (Main.netMode != NetmodeID.MultiplayerClient &&
+                (!HasParent || (parent.dontTakeDamage && parent.localAI[2] >= 1) || (int)parent.localAI[2] != ParentStageHelper || !Main.npc[ParentIndex].active))
+            {
+                Projectile.timeLeft = Math.Min(Projectile.timeLeft, 20);
+                NetMessage.SendData(MessageID.SyncProjectile, number: Projectile.whoAmI);
+                return true;
+            }
+            return false;
         }
     }
 

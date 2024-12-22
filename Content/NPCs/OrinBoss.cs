@@ -39,10 +39,10 @@ namespace DimDream.Content.NPCs
         { // Stage is decided by the boss' health percentage
             get
             {
-                if (GoingToStage <= 0)
+                if (StageHelper <= 0)
                     return 0;
 
-                if (GoingToStage <= 1)
+                if (StageHelper <= 1)
                     return 1;
 
                 if (NPC.life > NPC.lifeMax * .8f)
@@ -54,7 +54,7 @@ namespace DimDream.Content.NPCs
                 return 4;
             }
         }
-        private int GoingToStage // This will be checked to prevent starting a stage mid-pattern
+        private int StageHelper // Checked to prevent starting a stage during a pattern, amidst other things
         {
             get => (int)NPC.localAI[2];
             set => NPC.localAI[2] = value;
@@ -163,9 +163,9 @@ namespace DimDream.Content.NPCs
 
         public override bool CheckDead()
         {
-            if (GoingToStage < 2)
+            if (StageHelper < 10)
             {
-                GoingToStage = 2;
+                StageHelper = 10;
                 NPC.life = 1;
                 NPC.dontTakeDamage = true;
                 NPC.lifeMax = 60000;
@@ -186,6 +186,7 @@ namespace DimDream.Content.NPCs
             if (!Initialized) // Initialize tuff that cannot be initialized in SetDefaults()
             {
                 Initialized = true;
+                Main.NewText($"XIXAX {NPC.whoAmI}");
                 NPC.position = player.Center + new Vector2(Main.rand.Next(-500, 500), -1000);
                 ArenaCenter = player.Center;
             }
@@ -216,7 +217,7 @@ namespace DimDream.Content.NPCs
             if (Moving)
                 NPC.spriteDirection = NPC.velocity.X < 0 ? 1 : -1;
 
-            if (NPC.dontTakeDamage && GoingToStage >= 1 && NPC.life < NPC.lifeMax)
+            if (NPC.dontTakeDamage && StageHelper > 0 && NPC.life < NPC.lifeMax)
                 Revive(RevivingIntoStage);
             else
                 switch (Stage)
@@ -354,23 +355,6 @@ namespace DimDream.Content.NPCs
             }
         }
 
-        public void RiceCircle(int distance, float offset, int riceCount)
-        {
-            for (int i = 0; i < riceCount; i++)
-            {
-                float angle = offset + MathHelper.TwoPi / riceCount * i;
-                Vector2 positionOffset = new(NPC.Center.X + MathF.Sin(angle) * distance, NPC.Center.Y - MathF.Cos(angle) * distance);
-                Vector2 velocity = new Vector2(0, -1).RotatedBy(angle);
-                float speed = .5f;
-
-                int type = ModContent.ProjectileType<Rice>();
-                var entitySource = NPC.GetSource_FromAI();
-                int damage = ProjDamage;
-
-                Projectile.NewProjectile(entitySource, positionOffset, velocity * speed, type, damage, 0f, Main.myPlayer, 1f);
-            }
-        }
-
         public void Circle(Vector2 center, float distance, float offset, float speed, int count, int type, int timeLeft = -1, int color = 0)
         {
             for (int i = 0; i < count; i++)
@@ -382,7 +366,7 @@ namespace DimDream.Content.NPCs
                 var entitySource = NPC.GetSource_FromAI();
                 int damage = ProjDamage;
 
-                Projectile p = Projectile.NewProjectileDirect(entitySource, positionOffset, velocity * speed, type, damage, 0f, Main.myPlayer, 1f, color);
+                Projectile p = Projectile.NewProjectileDirect(entitySource, positionOffset, velocity * speed, type, damage, 0f, Main.myPlayer, 1f, color, NPC.whoAmI);
                 
                 if (timeLeft >= 0)
                     p.timeLeft = timeLeft;
@@ -490,7 +474,7 @@ namespace DimDream.Content.NPCs
                 NPC.dontTakeDamage = true;
 
             if (Counter >= 1100)
-                GoingToStage = 1;
+                StageHelper = 1;
         }
 
         public void Stage1(Player player)
@@ -553,7 +537,7 @@ namespace DimDream.Content.NPCs
 
         public void Stage3(Player player)
         {
-            if (Main.netMode != NetmodeID.MultiplayerClient && GoingToStage >= 3)
+            if (Main.netMode != NetmodeID.MultiplayerClient && StageHelper >= 11)
             {
                 if (Counter == 1)
                     GoToDefaultPosition();
@@ -573,9 +557,9 @@ namespace DimDream.Content.NPCs
                 }
             }
 
-            if (GoingToStage < 3) 
+            if (StageHelper < 11) 
             {
-                GoingToStage = 3;
+                StageHelper = 11;
                 Counter = 0;
                 Inverter = 1;
             }
@@ -590,9 +574,9 @@ namespace DimDream.Content.NPCs
 
         public void Stage4(Player player)
         {
-            if (Main.netMode != NetmodeID.MultiplayerClient && GoingToStage >= 4)
+            if (Main.netMode != NetmodeID.MultiplayerClient && StageHelper >= 12)
             {
-                if (Counter == 1)
+                if (Counter <= 1)
                     GoToDefaultPosition();
 
                 if (Counter % 60 == 0 && Counter <= 420)
@@ -628,9 +612,9 @@ namespace DimDream.Content.NPCs
                     GoToDefaultPosition();
             }
 
-            if (GoingToStage < 4)
+            if (StageHelper < 12)
             {
-                GoingToStage = 4;
+                StageHelper = 12;
                 Counter = -100;
                 Inverter = -1;
             }

@@ -25,8 +25,15 @@ namespace DimDream.Content.Projectiles
         {
             get => Projectile.ai[1];
             set => Projectile.ai[1] = value;
-
         }
+
+        public int ParentIndex
+        {
+            get => (int)Projectile.ai[2];
+            set => Projectile.ai[2] = value;
+        }
+        public bool HasParent => ParentIndex > -1;
+        public int ParentStageHelper { get; set; }
 
         private bool FadedIn
         {
@@ -34,7 +41,7 @@ namespace DimDream.Content.Projectiles
             set => Projectile.localAI[0] = value ? 1f : 0f;
         }
 
-        private bool PlayedSpawnSound
+        private bool Initialized
         {
             get => Projectile.localAI[1] == 1f;
             set => Projectile.localAI[1] = value ? 1f : 0f;
@@ -103,11 +110,14 @@ namespace DimDream.Content.Projectiles
         {
             Counter++;
 
-            if (!PlayedSpawnSound)
+            if (!Initialized)
             {
-                PlayedSpawnSound = true;
+                Initialized = true;
+                ParentStageHelper = (int)Main.npc[ParentIndex].localAI[2];
                 SoundEngine.PlaySound(SoundID.Item8, Projectile.position);
             }
+
+            Despawn();
 
             float maxSpeed = 12f;
             if (Behavior == 1f && Projectile.velocity.Length() < maxSpeed && Projectile.timeLeft <= 150)
@@ -117,6 +127,18 @@ namespace DimDream.Content.Projectiles
             }
 
             Visuals();
+        }
+        public bool Despawn()
+        {
+            NPC parent = Main.npc[ParentIndex];
+            if (Main.netMode != NetmodeID.MultiplayerClient &&
+                (!HasParent || (parent.dontTakeDamage && parent.localAI[2] >= 1) || (int)parent.localAI[2] != ParentStageHelper || !Main.npc[ParentIndex].active))
+            {
+                Projectile.timeLeft = Math.Min(Projectile.timeLeft, 20);
+                NetMessage.SendData(MessageID.SyncProjectile, number: Projectile.whoAmI);
+                return true;
+            }
+            return false;
         }
 
         private void Visuals()

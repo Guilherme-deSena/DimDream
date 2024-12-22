@@ -226,7 +226,7 @@ namespace DimDream.Content.NPCs
                 float speed = 1f;
                 var entitySource = NPC.GetSource_FromAI();
                 int type = ModContent.ProjectileType<LargeBallRed>();
-                Projectile.NewProjectile(entitySource, position, direction * speed, type, NPC.damage, 2f, Main.myPlayer, 1f);
+                Projectile.NewProjectile(entitySource, position, direction * speed, type, NPC.damage, 2f, Main.myPlayer, 1f, ai2: ParentIndex);
             }
         }
     }
@@ -304,7 +304,7 @@ namespace DimDream.Content.NPCs
                 float speed = 7f;
                 var entitySource = NPC.GetSource_FromAI();
                 int type = ModContent.ProjectileType<LargeBallBlue>();
-                Projectile.NewProjectile(entitySource, position, direction * speed, type, NPC.damage, 2f, Main.myPlayer);
+                Projectile.NewProjectile(entitySource, position, direction * speed, type, NPC.damage, 2f, Main.myPlayer, ai2: ParentIndex);
             }
         }
     }
