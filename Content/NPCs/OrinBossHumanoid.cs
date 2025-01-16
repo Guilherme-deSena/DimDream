@@ -9,18 +9,23 @@ using DimDream.Content.Projectiles;
 using DimDream.Common.Systems;
 using Microsoft.Xna.Framework;
 using ReLogic.Content;
+using ReLogic.Graphics;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria.GameContent.ItemDropRules;
 using DimDream.Content.Items.Weapons;
 using DimDream.Content.Items.Consumables;
 using System.Diagnostics.Metrics;
 using DimDream.Content.BossBars;
+using Microsoft.CodeAnalysis.Text;
 
 namespace DimDream.Content.NPCs
 {
     [AutoloadBossHead] // This attribute looks for a texture called "ClassName_Head_Boss" and automatically registers it as the NPC boss head icon
-    internal class OrinBoss : ModNPC
+    internal class OrinBossHumanoid : ModNPC
     {
+        private int AnimationCount { get; set; } = 0;
+        private bool Casting { get; set; } = false;
+        private int AnimationDirection { get; set; } = 1;
         private bool Initialized { get; set; } = false;
         private int Inverter { get; set; } = 1;
         private Vector2 ArenaCenter { get; set; }
@@ -54,6 +59,11 @@ namespace DimDream.Content.NPCs
                 return 4;
             }
         }
+        private int StageLoopCount
+        {
+            get => (int)NPC.localAI[1];
+            set => NPC.localAI[1] = value;
+        }
         private int StageHelper // Checked to prevent starting a stage during a pattern, amidst other things
         {
             get => (int)NPC.localAI[2];
@@ -84,7 +94,7 @@ namespace DimDream.Content.NPCs
 
         public override void SetStaticDefaults()
         {
-            Main.npcFrameCount[Type] = 20;
+            Main.npcFrameCount[Type] = 27;
             NPCID.Sets.MPAllowedEnemies[Type] = true;
             NPCID.Sets.BossBestiaryPriority.Add(Type);
             NPCID.Sets.SpecificDebuffImmunity[Type][BuffID.Confused] = true;
@@ -174,6 +184,51 @@ namespace DimDream.Content.NPCs
 
             return true;
         }
+
+        public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
+        {
+            if (Stage == 4)
+            {
+                int timeFactor = StageLoopCount > 0 ? 999 : Counter + 100;
+                DrawSpellName(spriteBatch, "Cat Sign \"Cat's Walk\"", timeFactor);
+            }
+
+            //DrawNPC(spriteBatch, new(Main.miniMapX - Main.miniMapWidth / 2 - 400, Main.miniMapY));
+
+            return true;
+        }
+
+        public void DrawSpellName(SpriteBatch spriteBatch, string spellName, int timeFactor)
+        {
+            DynamicSpriteFont font = FontAssets.MouseText.Value;
+            float textSize = font.MeasureString(spellName).X;
+            float heightOffset = timeFactor < 100 ? 500 : MathF.Max(0, 500 - (timeFactor - 100) * 15);
+            Vector2 position = new(Main.miniMapX - Main.miniMapWidth / 2 - (textSize + 50), Main.miniMapY + heightOffset);
+
+            spriteBatch.DrawString(font, spellName, position, Color.White);
+        }
+
+        public void DrawNPC(SpriteBatch spriteBatch, Vector2 position)
+        {
+            Texture2D npcTexture = TextureAssets.Npc[NPC.type].Value;
+            int frameHeight = npcTexture.Height / Main.npcFrameCount[NPC.type];
+            Rectangle sourceRectangle = new Rectangle(0, 0, npcTexture.Width, frameHeight);
+            Vector2 origin = sourceRectangle.Size() / 2f;
+
+            spriteBatch.Draw(
+                npcTexture,
+                position,
+                sourceRectangle,
+                Color.White,
+                0,
+                origin,
+                NPC.scale,
+                SpriteEffects.None,
+                0f);
+
+
+        }
+
         public override void AI()
         {
             // This should almost always be the first code in AI() as it is responsible for finding the proper player target
@@ -186,7 +241,6 @@ namespace DimDream.Content.NPCs
             if (!Initialized) // Initialize tuff that cannot be initialized in SetDefaults()
             {
                 Initialized = true;
-                Main.NewText($"XIXAX {NPC.whoAmI}");
                 NPC.position = player.Center + new Vector2(Main.rand.Next(-500, 500), -1000);
                 ArenaCenter = player.Center;
             }
@@ -215,7 +269,7 @@ namespace DimDream.Content.NPCs
             NPC.velocity = moveTo;
 
             if (Moving)
-                NPC.spriteDirection = NPC.velocity.X < 0 ? 1 : -1;
+                NPC.spriteDirection = NPC.velocity.X < 0 ? -1 : 1;
 
             if (NPC.dontTakeDamage && StageHelper > 0 && NPC.life < NPC.lifeMax)
                 Revive(RevivingIntoStage);
@@ -246,34 +300,69 @@ namespace DimDream.Content.NPCs
             int frameSpeed = 6;
             NPC.frameCounter++;
 
-            int firstMovingFrame = 15; // First frame in spritesheet where Orin is moving
+            int firstMoving = 24 * frameHeight;
+            int firstCasting = 13 * frameHeight;
+            int firstBlinking = 8 * frameHeight;
+            int lastFullCasting = 20 * frameHeight;
+            int lastFrame = 26 * frameHeight;
 
-            if (Moving)
-            {
-                switch (NPC.velocity.Length())
-                {
-                    case > 9:
-                        NPC.frame.Y = frameHeight * firstMovingFrame;
-                        break;
-                    case > 6:
-                        NPC.frame.Y = frameHeight * (firstMovingFrame + 1);
-                        break;
-                    default:
-                        NPC.frame.Y = frameHeight * (firstMovingFrame + 2);
-                        break;
-                }
-            } else if (NPC.frameCounter >= frameSpeed)
+            if (NPC.frameCounter >= frameSpeed)
             {
                 NPC.frameCounter = 0;
-                NPC.frame.Y += frameHeight;
+                NPC.frame.Y += frameHeight * AnimationDirection;
 
-                if (NPC.frame.Y == 15 * frameHeight || NPC.frame.Y >= 20 * frameHeight)
+                if (Moving)
                 {
-                    NPC.frame.Y = 0;
+                    AnimationDirection = 1;
+                    if (NPC.frame.Y < firstMoving)
+                        NPC.frame.Y = firstMoving;
+                    if (NPC.frame.Y > lastFrame)
+                        NPC.frame.Y = lastFrame;
+                }
+                else if (Casting)
+                {
+                    if (NPC.frame.Y < firstCasting)
+                    {
+                        NPC.frame.Y = lastFullCasting + frameHeight;
+                        AnimationDirection = 1;
+                    }
+                    else if (NPC.frame.Y == firstCasting || NPC.frame.Y == lastFullCasting)
+                        AnimationDirection *= -1;
+                    else if (NPC.frame.Y >= firstMoving)
+                        NPC.frame.Y = firstCasting + 3 * frameHeight;
+                }
+                else if (AnimationCount >= 6 && AnimationDirection == 1)
+                {
+                    if (NPC.frame.Y < firstBlinking)
+                        NPC.frame.Y = firstBlinking;
+                    
+                    if (NPC.frame.Y > firstCasting - frameHeight)
+                    {
+                        NPC.frame.Y = 5 * frameHeight;
+                        AnimationCount = 0;
+                    }
+                }
+                else if (NPC.frame.Y >= firstBlinking - frameHeight || NPC.frame.Y <= 0)
+                {
+                    AnimationDirection *= -1;
+                    AnimationCount++;
+
+                    if (NPC.frame.Y < firstMoving && NPC.frame.Y >= firstCasting)
+                    {
+                        AnimationDirection = -1;
+                        if (NPC.frame.Y == lastFullCasting && AnimationDirection == -1)
+                            NPC.frame.Y = frameHeight * 2;
+                        else if (NPC.frame.Y <= lastFullCasting)
+                            NPC.frame.Y = firstMoving - frameHeight;
+                    }
+                    else if (NPC.frame.Y >= firstCasting)
+                    {
+                        AnimationDirection = 1;
+                        NPC.frame.Y = frameHeight;
+                    }
                 }
             }
         }
-
 
         public void PrePatternDust(int distance)
         {
@@ -349,7 +438,7 @@ namespace DimDream.Content.NPCs
 
                 NPC spirit = NPC.NewNPCDirect(entitySource, position, type, NPC.whoAmI, timeLeft);
                 spirit.velocity = -velocity * speed;
-                
+
                 OrinEvilSpiritBlue s = (OrinEvilSpiritBlue)spirit.ModNPC;
                 s.ParentIndex = NPC.whoAmI;
             }
@@ -367,7 +456,7 @@ namespace DimDream.Content.NPCs
                 int damage = ProjDamage;
 
                 Projectile p = Projectile.NewProjectileDirect(entitySource, positionOffset, velocity * speed, type, damage, 0f, Main.myPlayer, 1f, color, NPC.whoAmI);
-                
+
                 if (timeLeft >= 0)
                     p.timeLeft = timeLeft;
             }
@@ -429,7 +518,7 @@ namespace DimDream.Content.NPCs
             }
         }
 
-        public void Stage0(Player player) 
+        public void Stage0(Player player)
         {
             if (Main.netMode != NetmodeID.MultiplayerClient) // Only server should spawn bullets and change destination
             {
@@ -458,7 +547,7 @@ namespace DimDream.Content.NPCs
                     Main.NewText($"Projectiles: {projectileCount}, spirits: {spiritCount}");*/
 
                     if (spiritCount < 12)
-                        for (int i = 0; i < 3;  i++)
+                        for (int i = 0; i < 3; i++)
                         {
                             float angle = MathHelper.TwoPi / 3 * i;
                             Vector2 position = new Vector2(MathF.Sin(angle) * 50, MathF.Cos(angle) * 50) + NPC.Center;
@@ -486,7 +575,7 @@ namespace DimDream.Content.NPCs
 
                 if (Counter > 400 && Counter % 10 == 0 && Counter < 900)
                 {
-                    float angle = Counter <= 500 ? 0 : MathF.Sin(Counter - 500) + Main.rand.NextFloat(Pi/20);
+                    float angle = Counter <= 500 ? 0 : MathF.Sin(Counter - 500) + Main.rand.NextFloat(Pi / 20);
                     int distance = (int)Math.Abs(650 - Counter);
                     int type = ModContent.ProjectileType<Rice>();
 
@@ -497,6 +586,12 @@ namespace DimDream.Content.NPCs
                         SpawnBurstSpirits(distance, angle, 5, 1200 - Counter);
                 }
             }
+
+            if (Counter == 200)
+                Casting = true;
+
+            if (Counter == 900)
+                Casting = false;
 
             if (Counter > 300 && Counter < 405)
                 PrePatternDust(500 - Counter % 300 * 5);
@@ -550,14 +645,14 @@ namespace DimDream.Content.NPCs
                     float speed = .01f;
                     int count = Counter < 150 ? 15 : 30;
                     int type = ModContent.ProjectileType<Diamond>();
-                    SavedRandom += Counter < 150 ? Main.rand.NextFloat(-Pi / 30, Pi / 30) + Pi / 100 * Inverter 
+                    SavedRandom += Counter < 150 ? Main.rand.NextFloat(-Pi / 30, Pi / 30) + Pi / 100 * Inverter
                         : Pi / 100 * -Inverter;
 
                     Circle(NPC.Center, distance, SavedRandom, speed, count, type, timeLeft, 1);
                 }
             }
 
-            if (StageHelper < 11) 
+            if (StageHelper < 11)
             {
                 StageHelper = 11;
                 Counter = 0;
@@ -567,7 +662,7 @@ namespace DimDream.Content.NPCs
             if (Counter >= 300)
             {
                 SavedRandom = 0;
-                Counter = -100;
+                Counter = 0;
                 Inverter *= -1;
             }
         }
@@ -615,12 +710,14 @@ namespace DimDream.Content.NPCs
             if (StageHelper < 12)
             {
                 StageHelper = 12;
+                StageLoopCount = 0;
                 Counter = -100;
                 Inverter = -1;
             }
 
             if (Counter >= 1100)
             {
+                StageLoopCount++;
                 Counter = 0;
             }
         }

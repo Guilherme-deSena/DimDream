@@ -40,7 +40,7 @@ namespace DimDream.Content.NPCs
 
         public static int ParentType()
         {
-            return ModContent.NPCType<OrinBoss>();
+            return ModContent.NPCType<OrinBossCat>();
         }
 
         public override void SetStaticDefaults()
@@ -210,7 +210,7 @@ namespace DimDream.Content.NPCs
             if (Counter % 60 == 0)
             {
                 Vector2 toDestination = player.Center - NPC.Center;
-                float offset = toDestination.SafeNormalize(Vector2.UnitY).ToRotation();
+                float offset = toDestination.SafeNormalize(Vector2.UnitY).ToRotation() + Main.rand.NextFloat(-MathHelper.Pi / 40, MathHelper.Pi / 40);
                 CircleOfBalls(8, offset);
             }
             Counter++;

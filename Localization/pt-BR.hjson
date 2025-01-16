@@ -16,6 +16,8 @@ Mods: {
 			// OrinEvilSpirit.DisplayName: Orin Evil Spirit
 			// OrinEvilSpiritBlue.DisplayName: Orin Evil Spirit Blue
 			// OrinEvilSpiritRed.DisplayName: Orin Evil Spirit Red
+			// OrinBossCat.DisplayName: Orin Boss Cat
+			// OrinBossHumanoid.DisplayName: Orin Boss Humanoid
 		}
 
 		Items: {
