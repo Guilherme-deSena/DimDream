@@ -6,6 +6,7 @@ using MonoMod.Core.Utils;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Metrics;
+using System.Security.Cryptography.Pkcs;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.GameContent.Bestiary;
@@ -31,16 +32,12 @@ namespace DimDream.Content.NPCs
         }
 
         public bool HasParent => ParentIndex > -1;
+        public int ParentStageHelper { get; set; }
 
         public float Counter
         {
             get => NPC.localAI[3];
             set => NPC.localAI[3] = value;
-        }
-
-        public static int ParentType()
-        {
-            return ModContent.NPCType<OrinBossCat>();
         }
 
         public override void SetStaticDefaults()
@@ -80,17 +77,6 @@ namespace DimDream.Content.NPCs
             NPC.velocity = new(Main.rand.NextFloat(-maxSpeed, maxSpeed), Main.rand.NextFloat(-maxSpeed, maxSpeed));
         }
 
-        public override void SetBestiary(BestiaryDatabase database, BestiaryEntry bestiaryEntry)
-        {
-            // Makes it so whenever you beat the boss associated with it, it will also get unlocked immediately
-            int associatedNPCType = ParentType();
-            bestiaryEntry.UIInfoProvider = new CommonEnemyUICollectionInfoProvider(ContentSamples.NpcBestiaryCreditIdsByNpcNetIds[associatedNPCType], quickUnlock: true);
-
-            bestiaryEntry.Info.AddRange(new List<IBestiaryInfoElement> {
-                new MoonLordPortraitBackgroundProviderBestiaryInfoElement(), // Plain black background
-				new FlavorTextBestiaryInfoElement("A vengeful spirit from the Underworld. Orin seems particularly good at making them do her bidding.")
-            });
-        }
 
         public override bool CanHitPlayer(Player target, ref int cooldownSlot)
         {
@@ -153,12 +139,8 @@ namespace DimDream.Content.NPCs
         {
             NPC parent = Main.npc[ParentIndex];
             if (Main.netMode != NetmodeID.MultiplayerClient &&
-                (!HasParent || (parent.dontTakeDamage && parent.localAI[2] >= 1) || !Main.npc[ParentIndex].active || Main.npc[ParentIndex].type != ParentType()))
+                (!HasParent || (int)parent.localAI[2] != ParentStageHelper || !Main.npc[ParentIndex].active))
             {
-                // * Not spawned by the boss body (didn't assign a position and parent) or
-                // * Parent isn't active or
-                // * Parent isn't the body
-                // => invalid, kill itself without dropping any items
                 NPC.active = false;
                 NPC.life = 0;
                 NetMessage.SendData(MessageID.SyncNPC, number: NPC.whoAmI);
@@ -182,7 +164,7 @@ namespace DimDream.Content.NPCs
         }
     }
 
-    internal class OrinEvilSpiritRed : OrinEvilSpirit
+    internal class OrinEvilSpiritCircleStill : OrinEvilSpirit
     {
         public override void AI()
         {
@@ -193,15 +175,16 @@ namespace DimDream.Content.NPCs
 
             player = Main.player[NPC.target];
 
-            if (Despawn())
-                return;
-
             if (!Initialized)
             {
                 Initialized = true;
+                ParentStageHelper = (int)Main.npc[ParentIndex].localAI[2];
                 float maxSpeed = .2f;
                 NPC.velocity = new(Main.rand.NextFloat(-maxSpeed, maxSpeed), Main.rand.NextFloat(-maxSpeed, maxSpeed));
             }
+
+            if (Despawn())
+                return;
 
             if (Counter % 6 == 0)
                 CreateDust();
@@ -211,27 +194,72 @@ namespace DimDream.Content.NPCs
             {
                 Vector2 toDestination = player.Center - NPC.Center;
                 float offset = toDestination.SafeNormalize(Vector2.UnitY).ToRotation() + Main.rand.NextFloat(-MathHelper.Pi / 40, MathHelper.Pi / 40);
-                CircleOfBalls(8, offset);
+                Circle(NPC.Center, 60, offset, 1f, 8, ModContent.ProjectileType<SpeedUpLargeBallRed>(), 20);
             }
             Counter++;
         }
 
-        public void CircleOfBalls(int ballCount, float offset)
+        public void Circle(Vector2 center, float distance, float offset, float speed, int count, int type, int frameToSpeedUp = 0)
         {
-            for (int i = 0; i < ballCount; i++)
+            for (int i = 0; i < count; i++)
             {
-                float angle = MathHelper.TwoPi / ballCount * i + offset;
-                Vector2 position = new(NPC.Center.X + 60 * MathF.Sin(angle), NPC.Center.Y - 60 * MathF.Cos(angle));
-                Vector2 direction = new Vector2(0, -1).RotatedBy(angle);
-                float speed = 1f;
+                float angle = offset + MathHelper.TwoPi / count * i;
+                Vector2 positionOffset = new(center.X + MathF.Sin(angle) * distance, center.Y - MathF.Cos(angle) * distance);
+                Vector2 velocity = new Vector2(0, -1).RotatedBy(angle);
+
                 var entitySource = NPC.GetSource_FromAI();
-                int type = ModContent.ProjectileType<LargeBallRed>();
-                Projectile.NewProjectile(entitySource, position, direction * speed, type, NPC.damage, 2f, Main.myPlayer, 1f, ai2: ParentIndex);
+
+                Projectile.NewProjectile(entitySource, positionOffset, velocity * speed, type, NPC.damage, 0f, Main.myPlayer, 6f, frameToSpeedUp, ParentIndex);
             }
         }
     }
+    internal class OrinEvilSpiritCircleThrust : OrinEvilSpiritCircleStill
+    {
+        public override string Texture => "DimDream/Content/NPCs/OrinEvilSpiritBlue";
 
-    internal class OrinEvilSpiritBlue : OrinEvilSpirit
+        public int FrameToExplode
+        {
+            get => (int)NPC.ai[0];
+        }
+
+        public override void AI()
+        {
+            // This should almost always be the first code in AI() as it is responsible for finding the proper player target
+            Player player = Main.player[NPC.target];
+            if (NPC.target < 0 || NPC.target == 255 || player.dead || !player.active || Vector2.Distance(NPC.Center, player.Center) > 3000f)
+                NPC.TargetClosest();
+
+            player = Main.player[NPC.target];
+
+            if (!Initialized)
+            {
+                Initialized = true;
+                ParentStageHelper = (int)Main.npc[ParentIndex].localAI[2];
+            }
+
+            if (Despawn())
+                return;
+
+            if (Counter == FrameToExplode)
+            {
+                NPC.active = false;
+                NPC.life = 0;
+                NetMessage.SendData(MessageID.SyncNPC, number: NPC.whoAmI);
+            }
+
+            if (Counter % 6 == 0)
+                CreateDust();
+
+            if (Counter % 20 == 0)
+            {
+                float offset = NPC.velocity.SafeNormalize(Vector2.UnitY).ToRotation() - MathHelper.Pi / 14;
+                Circle(NPC.Center, 20, offset, 1f, 7, ModContent.ProjectileType<SpeedUpLargeBallBlue>(), 0);
+            }
+            Counter++;
+        }
+    }
+
+    internal class OrinEvilSpiritBurst : OrinEvilSpirit
     {
         public override string Texture => "DimDream/Content/NPCs/OrinEvilSpiritBlue";
         public int FrameToExplode
@@ -272,6 +300,12 @@ namespace DimDream.Content.NPCs
 
             player = Main.player[NPC.target];
 
+            if (!Initialized)
+            {
+                Initialized = true;
+                ParentStageHelper = (int)Main.npc[ParentIndex].localAI[2];
+            }
+
             if (Despawn())
                 return;
 
@@ -284,7 +318,7 @@ namespace DimDream.Content.NPCs
             {
                 Vector2 toDestination = player.Center - NPC.Center;
                 float angle = toDestination.SafeNormalize(Vector2.UnitY).ToRotation();
-                BallBurst(3, angle, MathHelper.PiOver2);
+                BallBurst(NPC.Center, 3, angle, MathHelper.PiOver2);
 
                 NPC.active = false;
                 NPC.life = 0;
@@ -292,19 +326,227 @@ namespace DimDream.Content.NPCs
             }
         }
 
-        public void BallBurst(int ballCount, float targetAngle, float totalSpread)
+        public void BallBurst(Vector2 position, int ballCount, float targetAngle, float totalSpread)
         {
             float individualSpacing = totalSpread / (ballCount - 1);
             float startAngle = targetAngle - totalSpread / 2;
             for (int i = 0; i < ballCount; i++)
             {
                 float angle = startAngle + i * individualSpacing;
-                Vector2 position = NPC.Center;
                 Vector2 direction = new Vector2(MathF.Cos(angle), MathF.Sin(angle)).RotatedByRandom(MathHelper.PiOver2);
                 float speed = 7f;
                 var entitySource = NPC.GetSource_FromAI();
+                int type = ModContent.ProjectileType<BasicLargeBallBlue>();
+                Projectile.NewProjectile(entitySource, position, direction * speed, type, NPC.damage, 0f, Main.myPlayer, ai2: ParentIndex);
+            }
+        }
+    }
+
+    internal class OrinEvilSpiritExplode : OrinEvilSpirit
+    {
+        public override string Texture => "DimDream/Content/NPCs/OrinEvilSpiritBlue";
+
+        public int FrameToExplode
+        {
+            get => (int)NPC.ai[0];
+        }
+        public override bool CheckDead()
+        {
+            NPC.life = 1;
+            NPC.dontTakeDamage = true;
+            if (Counter < FrameToExplode)
+                Counter = FrameToExplode;
+
+            return false;
+        }
+        public override void AI()
+        {
+            Player player = Main.player[NPC.target];
+            if (NPC.target < 0 || NPC.target == 255 || player.dead || !player.active || Vector2.Distance(NPC.Center, player.Center) > 3000f)
+                NPC.TargetClosest();
+
+            player = Main.player[NPC.target];
+
+
+            if (!Initialized)
+            {
+                Initialized = true;
+                ParentStageHelper = (int)Main.npc[ParentIndex].localAI[2];
+            }
+
+            if (Despawn())
+                return;
+
+            Counter++;
+            if (Counter % 6 == 0)
+                CreateDust();
+
+            if (Counter >= FrameToExplode && FrameToExplode != 0 && Main.netMode != NetmodeID.MultiplayerClient)
+            {
+                Vector2 toDestination = player.Center - NPC.Center;
+                float angle = toDestination.SafeNormalize(Vector2.UnitY).ToRotation();
+                float speed = 22f;
+                for (int i = 0; i < 4; i++)
+                    BallExplosion(16, angle, speed - i*4);
+
+                NPC.active = false;
+                NPC.life = 0;
+                NetMessage.SendData(MessageID.SyncNPC, number: NPC.whoAmI);
+            }
+        }
+
+        public void BallExplosion(int ballCount, float offset, float speed)
+        {
+            for (int i = 0; i < ballCount; i++)
+            {
+                float angle = offset + MathHelper.TwoPi / ballCount * i;
+                Vector2 position = NPC.Center;
+                Vector2 direction = new Vector2(MathF.Cos(angle), MathF.Sin(angle));
+                var entitySource = NPC.GetSource_FromAI();
                 int type = ModContent.ProjectileType<LargeBallBlue>();
-                Projectile.NewProjectile(entitySource, position, direction * speed, type, NPC.damage, 2f, Main.myPlayer, ai2: ParentIndex);
+                Projectile.NewProjectile(entitySource, position, direction * speed, type, NPC.damage, 0f, Main.myPlayer, 2, ai2: ParentIndex);
+            }
+        }
+
+        
+    }
+
+    internal class OrinEvilSpiritSpiral : OrinEvilSpirit
+    {
+        public float OrbitOffset
+        {
+            get => NPC.localAI[0];
+            set => NPC.localAI[0] = value;
+        }
+
+        public Vector2 OrbitCenter
+        {
+            get => new(NPC.localAI[1], NPC.localAI[2]);
+            set
+            {
+                NPC.localAI[1] = value.X;
+                NPC.localAI[2] = value.Y;
+            }
+        }
+ 
+        public override void AI()
+        {
+            if (!Initialized)
+            {
+                Initialized = true;
+                ParentStageHelper = (int)Main.npc[ParentIndex].localAI[2];
+            }
+
+            if (Despawn())
+                return;
+
+            Counter++;
+            if (Counter % 6 == 0)
+                CreateDust();
+
+            if (OrbitCenter == Vector2.Zero)
+            {
+                OrbitCenter = NPC.Center + NPC.velocity; // At the start, velocity is specifically set to be the difference between the npc and the player
+                OrbitOffset = .99f;
+            }
+
+            float rotationSpeed = MathHelper.Pi / 180f; // Adjust for slower/faster orbit
+
+            Vector2 offset = NPC.Center - OrbitCenter;
+            Vector2 offsetNormalized = offset.SafeNormalize(Vector2.UnitY);
+            Vector2 rotationMovement = offsetNormalized.RotatedBy(rotationSpeed);
+
+
+            offsetNormalized *= OrbitOffset;
+
+            if (OrbitOffset <= 1)
+                OrbitOffset += .0001f;
+            else
+                OrbitOffset += .00005f;
+
+            NPC.velocity = rotationMovement * 200 - offsetNormalized * 200;
+
+
+            if (Main.netMode != NetmodeID.MultiplayerClient && Counter < 100 && Counter % 3 == 0)
+            {
+                Vector2 toOrbitCenter = (OrbitCenter - NPC.Center).SafeNormalize(Vector2.UnitY);
+
+                SpawnLoneRice(NPC.Center, toOrbitCenter, 300);
+            }
+
+            if (Main.netMode != NetmodeID.MultiplayerClient && offset.Length() < 8)
+            {
+                NPC.active = false;
+                NPC.life = 0;
+                NetMessage.SendData(MessageID.SyncNPC, number: NPC.whoAmI);
+            }
+        }
+
+        public void SpawnLoneRice(Vector2 position, Vector2 direction, int frameToSpeedUp)
+        {
+            float speed = .01f;
+            float maxSpeed = 3f;
+
+            var entitySource = NPC.GetSource_FromAI();
+            int type = ModContent.ProjectileType<SpeedUpRiceBlue>();
+            Projectile p = Projectile.NewProjectileDirect(entitySource, position, direction * speed, type, NPC.damage, 0f, Main.myPlayer, maxSpeed, frameToSpeedUp, ai2: ParentIndex);
+            p.timeLeft = 700;
+        }
+    }
+
+    internal class OrinEvilSpiritRotating : OrinEvilSpiritSpiral
+    {
+        public override string Texture => "DimDream/Content/NPCs/OrinEvilSpiritBlue";
+
+        public int FrameToExplode
+        {
+            get => (int)NPC.ai[0];
+        }
+
+        public Vector2 OrbitVelocity
+        {
+            get => new(NPC.ai[1], NPC.ai[2]);
+            set 
+            {
+                NPC.ai[1] = value.X;
+                NPC.ai[2] = value.Y;
+            }
+        }
+
+        public override void AI()
+        {
+            NPC.dontTakeDamage = true;
+
+            if (!Initialized)
+            {
+                Initialized = true;
+                ParentStageHelper = (int)Main.npc[ParentIndex].localAI[2];
+            }
+
+            if (Despawn())
+                return;
+
+            Counter++;
+            if (Counter % 6 == 0)
+                CreateDust();
+
+            if (OrbitCenter == Vector2.Zero)
+                OrbitCenter = NPC.Center + NPC.velocity;
+            else if (OrbitVelocity != Vector2.Zero)
+                OrbitCenter += OrbitVelocity;
+
+            float rotationSpeed = MathHelper.Pi / 20f; // Adjust for slower/faster orbit
+
+            Vector2 offset = NPC.Center - OrbitCenter;
+            Vector2 rotationMovement = offset.RotatedBy(rotationSpeed);
+
+            NPC.velocity = rotationMovement - offset + OrbitVelocity;
+
+            if (Main.netMode != NetmodeID.MultiplayerClient && Counter >= FrameToExplode)
+            {
+                NPC.active = false;
+                NPC.life = 0;
+                NetMessage.SendData(MessageID.SyncNPC, number: NPC.whoAmI);
             }
         }
     }

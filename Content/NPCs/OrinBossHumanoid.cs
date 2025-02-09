@@ -17,19 +17,27 @@ using DimDream.Content.Items.Consumables;
 using System.Diagnostics.Metrics;
 using DimDream.Content.BossBars;
 using Microsoft.CodeAnalysis.Text;
+using Terraria.ModLoader.Default;
 
 namespace DimDream.Content.NPCs
 {
     [AutoloadBossHead] // This attribute looks for a texture called "ClassName_Head_Boss" and automatically registers it as the NPC boss head icon
     internal class OrinBossHumanoid : ModNPC
     {
-        private int AnimationCount { get; set; } = 0;
-        private bool Casting { get; set; } = false;
-        private int AnimationDirection { get; set; } = 1;
-        private bool Initialized { get; set; } = false;
-        private int Inverter { get; set; } = 1;
-        private Vector2 ArenaCenter { get; set; }
-        private Vector2 Destination
+        public int AnimationCount { get; set; } = 0;
+        public bool Casting { get; set; } = false;
+        public int AnimationDirection { get; set; } = 1;
+        public bool Initialized { get; set; } = false;
+        public int Inverter { get; set; } = 1;
+        public Vector2 ArenaCenter {
+            get => new(NPC.localAI[0], NPC.localAI[1]);
+            set
+            {
+                NPC.localAI[0] = value.X;
+                NPC.localAI[1] = value.Y;
+            }
+        }
+        public Vector2 Destination
         {
             get => new(NPC.ai[2], NPC.ai[3]);
             set
@@ -38,12 +46,17 @@ namespace DimDream.Content.NPCs
                 NPC.ai[3] = value.Y;
             }
         }
-        private bool Moving { get => NPC.velocity.Length() > .5; }
-        private static float Pi { get => MathHelper.Pi; } // Shorter way to write Pi because I'm too lazy to write Mathhelper everytime
-        private int Stage
-        { // Stage is decided by the boss' health percentage
+        public bool Moving { get => NPC.velocity.Length() > .5; }
+        public static float Pi { get => MathHelper.Pi; } // Shorter way to write Pi because I'm too lazy to write Mathhelper everytime
+        public int Stage
+        {
             get
             {
+                if (NPC.life > NPC.lifeMax * .5f)
+                    return 4;
+
+                return 5;
+                /*
                 if (StageHelper <= 0)
                     return 0;
 
@@ -56,23 +69,23 @@ namespace DimDream.Content.NPCs
                 if (NPC.life > NPC.lifeMax * .5f)
                     return 3;
 
-                return 4;
+                return 4;*/
             }
         }
-        private int StageLoopCount
-        {
-            get => (int)NPC.localAI[1];
-            set => NPC.localAI[1] = value;
-        }
-        private int StageHelper // Checked to prevent starting a stage during a pattern, amidst other things
+        public int StageLoopCount { get; set; } = 0;
+        public int StageHelper // Checked to prevent starting a stage during a pattern, amidst other things
         {
             get => (int)NPC.localAI[2];
             set => NPC.localAI[2] = value;
         }
-        private int RevivingIntoStage { get; set; } = 0;
-        private float SavedRandom { get; set; } = 0; // Used to keep a random float between frames
-        private Vector2 SavedPosition { get; set; } // Used to keep a position between frames
-        private int ProjDamage
+        public int RevivingIntoStage { get; set; } = 0;
+        public float SavedRandom { get; set; } = 0;
+        public Vector2 SavedPosition { get; set; }
+        public Vector2 CastingPosition
+        {
+            get => NPC.Center + new Vector2(70, -102);
+        }
+        public int ProjDamage
         {
             get
             {
@@ -85,7 +98,7 @@ namespace DimDream.Content.NPCs
                 return NPC.damage;
             }
         }
-        private int Counter
+        public int Counter
         {
             get => (int)NPC.localAI[3];
             set => NPC.localAI[3] = value;
@@ -107,7 +120,7 @@ namespace DimDream.Content.NPCs
             NPC.height = 78;
             NPC.damage = 45;
             NPC.defense = 22;
-            NPC.lifeMax = Main.expertMode ? 5000 : 8000;
+            NPC.lifeMax = Main.expertMode ? 15000 : 20000;
             NPC.HitSound = SoundID.NPCHit1;
             NPC.DeathSound = SoundID.NPCDeath1;
             NPC.knockBackResist = 0f;
@@ -212,7 +225,7 @@ namespace DimDream.Content.NPCs
         {
             Texture2D npcTexture = TextureAssets.Npc[NPC.type].Value;
             int frameHeight = npcTexture.Height / Main.npcFrameCount[NPC.type];
-            Rectangle sourceRectangle = new Rectangle(0, 0, npcTexture.Width, frameHeight);
+            Rectangle sourceRectangle = new(0, 0, npcTexture.Width, frameHeight);
             Vector2 origin = sourceRectangle.Size() / 2f;
 
             spriteBatch.Draw(
@@ -241,8 +254,10 @@ namespace DimDream.Content.NPCs
             if (!Initialized) // Initialize tuff that cannot be initialized in SetDefaults()
             {
                 Initialized = true;
-                NPC.position = player.Center + new Vector2(Main.rand.Next(-500, 500), -1000);
+                NPC.position = player.Center + new Vector2(Main.rand.Next(-500, 500), -600);
                 ArenaCenter = player.Center;
+                if (Main.netMode != NetmodeID.MultiplayerClient)
+                    GoToDefaultPosition();
             }
 
             if (player.dead)
@@ -258,8 +273,8 @@ namespace DimDream.Content.NPCs
             Vector2 toDestination = Destination - NPC.Center;
 
 
-            float speed = 15f;
-            float minSpeed = 8f;
+            float speed = 8f;
+            float minSpeed = 3f;
             float slowdownRange = speed * 40f;
             Vector2 destNormalized = toDestination.SafeNormalize(Vector2.UnitY);
             Vector2 moveTo = toDestination.Length() < slowdownRange ?
@@ -268,8 +283,7 @@ namespace DimDream.Content.NPCs
 
             NPC.velocity = moveTo;
 
-            if (Moving)
-                NPC.spriteDirection = NPC.velocity.X < 0 ? -1 : 1;
+            NPC.spriteDirection = NPC.velocity.X < .2f ? -1 : 1;
 
             if (NPC.dontTakeDamage && StageHelper > 0 && NPC.life < NPC.lifeMax)
                 Revive(RevivingIntoStage);
@@ -277,15 +291,17 @@ namespace DimDream.Content.NPCs
                 switch (Stage)
                 {
                     case 0:
-                        Stage0(player); break;
+                        Stage0(); break;
                     case 1:
-                        Stage1(player); break;
+                        Stage1(); break;
                     case 2:
-                        Stage2(player); break;
+                        Stage2(); break;
                     case 3:
                         Stage3(player); break;
                     case 4:
                         Stage4(player); break;
+                    case 5:
+                        Stage5(player); break;
                 }
 
 
@@ -416,35 +432,103 @@ namespace DimDream.Content.NPCs
             }
         }
 
-        public void SpawnCircleSpirit(Vector2 position)
+        public void SpawnFairyZombie(Vector2 position, Vector2 velocity)
         {
-            int type = ModContent.NPCType<OrinEvilSpiritRed>();
+            int type = ModContent.NPCType<OrinFairyZombie>();
             var entitySource = NPC.GetSource_FromAI();
 
-            OrinEvilSpiritRed spirit = (OrinEvilSpiritRed)NPC.NewNPCDirect(entitySource, (int)position.X, (int)position.Y, type, NPC.whoAmI).ModNPC;
+            NPC npc = NPC.NewNPCDirect(entitySource, (int)position.X, (int)position.Y, type, NPC.whoAmI, 1);
+            npc.velocity = new(velocity.X, velocity.Y + 1f);
+
+            OrinFairyZombie spirit = (OrinFairyZombie)npc.ModNPC;
             spirit.ParentIndex = NPC.whoAmI;
         }
 
-        public void SpawnBurstSpirits(int distance, float offset, int spiritCount, int timeLeft)
+        public void SpawnExplodingSpirits(Vector2 center, int distance, int spiritCount, int timeLeft)
         {
             for (int i = 0; i < spiritCount; i++)
             {
-                float angle = offset + MathHelper.TwoPi / spiritCount * i;
-                Vector2 position = new(NPC.Center.X + MathF.Sin(angle) * distance, NPC.Center.Y - MathF.Cos(angle) * distance);
-                Vector2 velocity = new Vector2(0, -1).RotatedBy(angle);
-                float speed = .1f;
-                int type = ModContent.NPCType<OrinEvilSpiritBlue>();
+                float angle = MathHelper.TwoPi / spiritCount * i;
+                Vector2 position = new(center.X + MathF.Sin(angle) * distance, center.Y - MathF.Cos(angle) * distance);
+                Vector2 velocity = new(MathF.Cos(angle), MathF.Sin(angle));
+                float speed = .07f;
+                int type = ModContent.NPCType<OrinEvilSpiritExplode>();
                 var entitySource = NPC.GetSource_FromAI();
 
                 NPC spirit = NPC.NewNPCDirect(entitySource, position, type, NPC.whoAmI, timeLeft);
-                spirit.velocity = -velocity * speed;
+                spirit.velocity = velocity * speed;
 
-                OrinEvilSpiritBlue s = (OrinEvilSpiritBlue)spirit.ModNPC;
+                OrinEvilSpiritExplode s = (OrinEvilSpiritExplode)spirit.ModNPC;
                 s.ParentIndex = NPC.whoAmI;
             }
         }
 
-        public void Circle(Vector2 center, float distance, float offset, float speed, int count, int type, int timeLeft = -1, int color = 0)
+        public void SpawnSpiralSpirits(Vector2 center, int distance, int spiritCount)
+        {
+            for (int i = 0; i < spiritCount; i++)
+            {
+                float angle = MathHelper.TwoPi / spiritCount * i;
+                Vector2 position = new(center.X + MathF.Sin(angle) * distance, center.Y - MathF.Cos(angle) * distance);
+                Vector2 velocity = new(-MathF.Sin(angle), MathF.Cos(angle));
+                int type = ModContent.NPCType<OrinEvilSpiritSpiral>();
+                var entitySource = NPC.GetSource_FromAI();
+                float speed = distance;
+
+                NPC spirit = NPC.NewNPCDirect(entitySource, position, type, NPC.whoAmI);
+                spirit.velocity = velocity * speed;
+
+                OrinEvilSpiritSpiral s = (OrinEvilSpiritSpiral)spirit.ModNPC;
+                s.ParentIndex = NPC.whoAmI;
+            }
+        }
+
+        public void SpawnThrustingSpirits(Vector2 center, int distance, float speed, int spiritCount, int timeLeft, float offset)
+        {
+            for (int i = 0; i < spiritCount; i++)
+            {
+                float angle = (MathHelper.TwoPi / spiritCount * i) + (Pi / 7) + offset;
+                Vector2 position = new(center.X + MathF.Sin(angle) * distance, center.Y - MathF.Cos(angle) * distance);
+                Vector2 velocity = new(MathF.Sin(angle), -MathF.Cos(angle));
+                int type = ModContent.NPCType<OrinEvilSpiritCircleThrust>();
+                var entitySource = NPC.GetSource_FromAI();
+
+                NPC spirit = NPC.NewNPCDirect(entitySource, position, type, NPC.whoAmI, timeLeft);
+                spirit.velocity = velocity * speed;
+
+                OrinEvilSpiritCircleThrust s = (OrinEvilSpiritCircleThrust)spirit.ModNPC;
+                s.ParentIndex = NPC.whoAmI;
+            }
+        }
+        public void SpawnRotatingSpirits(Vector2 center, Vector2 orbitVelocity, int distance, int spiritCount, int timeLeft)
+        {
+            for (int i = 0; i < spiritCount; i++)
+            {
+                float angle = MathHelper.TwoPi / spiritCount * i;
+                Vector2 position = new(center.X + MathF.Sin(angle) * distance, center.Y - MathF.Cos(angle) * distance);
+                Vector2 velocity = new(-MathF.Sin(angle), MathF.Cos(angle));
+                int type = ModContent.NPCType<OrinEvilSpiritRotating>();
+                var entitySource = NPC.GetSource_FromAI();
+                float speed = distance;
+
+                NPC spirit = NPC.NewNPCDirect(entitySource, position, type, NPC.whoAmI, timeLeft, orbitVelocity.X, orbitVelocity.Y);
+                spirit.velocity = velocity * speed;
+
+                OrinEvilSpiritRotating s = (OrinEvilSpiritRotating)spirit.ModNPC;
+                s.ParentIndex = NPC.whoAmI;
+            }
+        }
+
+        public void SpawnNuke(Vector2 position, int timeLeft)
+        {
+            var entitySource = NPC.GetSource_FromAI();
+            int type = ModContent.ProjectileType<Nuke>();
+            int damage = ProjDamage;
+
+            Projectile p = Projectile.NewProjectileDirect(entitySource, position, Vector2.Zero, type,damage, 0f, Main.myPlayer, .5f, ai2: NPC.whoAmI);
+            p.timeLeft = timeLeft;
+        }
+
+        public void Circle(Vector2 center, float distance, float offset, float speed, int count, int type, float finalSpeed, int frameToSpeedUp = 0, bool cheapKill = false)
         {
             for (int i = 0; i < count; i++)
             {
@@ -452,19 +536,52 @@ namespace DimDream.Content.NPCs
                 Vector2 positionOffset = new(center.X + MathF.Sin(angle) * distance, center.Y - MathF.Cos(angle) * distance);
                 Vector2 velocity = new Vector2(0, -1).RotatedBy(angle);
 
+                if (!cheapKill && IsPlayerInSquare(positionOffset, distance / 30))
+                    return;
+
                 var entitySource = NPC.GetSource_FromAI();
                 int damage = ProjDamage;
 
-                Projectile p = Projectile.NewProjectileDirect(entitySource, positionOffset, velocity * speed, type, damage, 0f, Main.myPlayer, 1f, color, NPC.whoAmI);
-
-                if (timeLeft >= 0)
-                    p.timeLeft = timeLeft;
+                Projectile p = Projectile.NewProjectileDirect(entitySource, positionOffset, velocity * speed, type, damage, 0f, Main.myPlayer, finalSpeed, frameToSpeedUp, NPC.whoAmI);
             }
+        }
+
+        public void ShootMany(int type, Vector2 position, float angle, float speed, int count)
+        {
+            for (int i=0; i < count; i++)
+            {
+                var entitySource = NPC.GetSource_FromAI();
+                int damage = ProjDamage;
+                Vector2 velocity = new Vector2(0, -1).RotatedBy(angle);
+
+                Projectile.NewProjectile(entitySource, position, velocity * speed, type, damage, 0f, Main.myPlayer, ai2: NPC.whoAmI);
+            }
+        }
+
+        public bool IsPlayerInSquare(Vector2 center, float halfSize)
+        {
+            Rectangle squareBounds = new Rectangle(
+                (int)(center.X - halfSize),
+                (int)(center.Y - halfSize),
+                (int)(halfSize * 2),
+                (int)(halfSize * 2)
+            );
+
+            foreach (Player player in Main.player)
+                if (player.active && !player.dead)
+                {
+                    Rectangle playerHitbox = player.Hitbox;
+
+                    if (squareBounds.Intersects(playerHitbox))
+                        return true;
+                }
+
+            return false;
         }
 
         public void GoToDefaultPosition()
         {
-            Vector2 MoveOffset = new Vector2(0, -350f);
+            Vector2 MoveOffset = new(0, -350f);
             Destination = ArenaCenter + MoveOffset;
             NPC.netUpdate = true; // Update Destination to every client so they know where the boss should move towards
         }
@@ -482,9 +599,16 @@ namespace DimDream.Content.NPCs
 
         public void AlternatingJump(int side)
         {
-            Vector2 direction = new(500 * side, 100);
+            Vector2 offset = new(500 * side, -350);
 
-            Destination = NPC.Center + direction;
+            Destination = ArenaCenter + offset;
+            NPC.netUpdate = true;
+        }
+
+        public void RandomJump()
+        {
+            Vector2 MoveOffset = new(Main.rand.NextFloat(-100, 100), Main.rand.NextFloat(-250, -450));
+            Destination = ArenaCenter + MoveOffset;
             NPC.netUpdate = true;
         }
 
@@ -495,17 +619,6 @@ namespace DimDream.Content.NPCs
             Destination = ArenaCenter + direction;
             NPC.netUpdate = true;
         }
-        /*
-        public void AltJump()
-        {
-            Vector2 dest = new Vector2(Main.rand.Next(-2, 2) * 300, -350 + Main.rand.Next(100)) + ArenaCenter;
-            Vector2 toDestination = dest - NPC.Center;
-            Vector2 toDestinationNormalized = toDestination.SafeNormalize(Vector2.UnitY);
-            float travelDistance = Math.Min(Main.rand.Next(400, 500), Vector2.Distance(dest, NPC.Center));
-
-            Destination = toDestinationNormalized * travelDistance + NPC.Center;
-            NPC.netUpdate = true;
-        }*/
 
         public void Revive(int stage)
         {
@@ -518,208 +631,252 @@ namespace DimDream.Content.NPCs
             }
         }
 
-        public void Stage0(Player player)
+        public void Stage0()
         {
             if (Main.netMode != NetmodeID.MultiplayerClient) // Only server should spawn bullets and change destination
             {
-                if (Counter % 101 == 1)
-                {
-                    if ((NPC.Center - ArenaCenter).Length() > 800)
-                        GoToDefaultPosition();
-                    else
-                        ShortJump();
-                }
-
-                if (Counter % 101 == 60 && !Moving)
-                {
-                    int spiritCount = 0;
-                    foreach (var otherNPC in Main.ActiveNPCs)
-                    {
-                        if (otherNPC.type == ModContent.NPCType<OrinEvilSpiritRed>())
-                            spiritCount++;
-                    }
-
-                    /*int projectileCount = 0;
-                    foreach (var proj in Main.ActiveProjectiles)
-                    {
-                        projectileCount++;
-                    }
-                    Main.NewText($"Projectiles: {projectileCount}, spirits: {spiritCount}");*/
-
-                    if (spiritCount < 12)
-                        for (int i = 0; i < 3; i++)
-                        {
-                            float angle = MathHelper.TwoPi / 3 * i;
-                            Vector2 position = new Vector2(MathF.Sin(angle) * 50, MathF.Cos(angle) * 50) + NPC.Center;
-                            SpawnCircleSpirit(position);
-                        }
-                }
-
-                if (Counter >= 1000)
-                    RunFromArena(1);
-            }
-
-            if (!NPC.dontTakeDamage)
-                NPC.dontTakeDamage = true;
-
-            if (Counter >= 1100)
-                StageHelper = 1;
-        }
-
-        public void Stage1(Player player)
-        {
-            if (Main.netMode != NetmodeID.MultiplayerClient)
-            {
                 if (Counter == 1)
-                    GoToDefaultPosition();
-
-                if (Counter > 400 && Counter % 10 == 0 && Counter < 900)
                 {
-                    float angle = Counter <= 500 ? 0 : MathF.Sin(Counter - 500) + Main.rand.NextFloat(Pi / 20);
-                    int distance = (int)Math.Abs(650 - Counter);
-                    int type = ModContent.ProjectileType<Rice>();
+                    RandomJump();
+                }
 
-                    Circle(NPC.Center, distance, angle, .5f, 16, type);
+                if (Counter > 100)
+                {
+                    int fairyCount = 0;
 
-                    angle = MathF.Sin(Counter - 400) + Main.rand.NextFloat(Pi / 20);
-                    if (Counter < 650 && Counter % 20 == 0)
-                        SpawnBurstSpirits(distance, angle, 5, 1200 - Counter);
+                    foreach (var otherNPC in Main.ActiveNPCs)
+                        if (otherNPC.type == ModContent.NPCType<OrinFairyZombie>())
+                            fairyCount++;
+
+
+                    if (fairyCount <= 16)
+                    {
+                        Vector2 velocity = new Vector2(1, 0).RotatedBy(fairyCount * Pi/16) * 5f;
+
+                        SpawnFairyZombie(NPC.Center, velocity);
+                    }
+                }
+
+                if (Casting && Counter % 5 == 0)
+                {
+                    float angle = Pi / 125 * (Counter + Main.rand.Next(10));
+                    float speed = Main.rand.NextFloat(2f, 4f);
+                    ShootMany(ModContent.ProjectileType<BasicSpiralBullet>(), CastingPosition, angle, speed, 2);
+                }
+
+                if (Counter % 500 > 100 && Counter % 500 <= 114)
+                {
+                    int start = Counter % 500 - 100;
+                    float angle = start * Pi / 120;
+                    float distance = start * 80;
+                    int frameToSpeedUp = 100 - start * 2;
+
+                    Circle(CastingPosition, distance, angle, .01f, 24, ModContent.ProjectileType<SpeedUpDiamondBlue>(), 20f, frameToSpeedUp);
+                }
+
+                if (Counter % 500 > 200 && Counter % 500 <= 214)
+                {
+                    int start = Counter % 500 - 200;
+                    float angle = -start * Pi / 120;
+                    float distance = start * 80;
+                    int frameToSpeedUp = 100 - start * 2;
+
+                    Circle(CastingPosition, distance, angle, .01f, 24, ModContent.ProjectileType<SpeedUpDiamondRed>(), 20f, frameToSpeedUp);
                 }
             }
 
-            if (Counter == 200)
+            if (Counter == 150)
                 Casting = true;
 
-            if (Counter == 900)
-                Casting = false;
-
-            if (Counter > 300 && Counter < 405)
-                PrePatternDust(500 - Counter % 300 * 5);
-
-            if (Counter >= 1080)
-            {
+            if (Counter >= 500)
                 Counter = 0;
-                NPC.dontTakeDamage = false;
-            }
         }
 
-
-        public void Stage2(Player player)
+        public void Stage1()
         {
-            if (Main.netMode != NetmodeID.MultiplayerClient)
+            if (Main.netMode != NetmodeID.MultiplayerClient && StageHelper >= 1) // Only server should spawn bullets and change destination
             {
                 if (Counter == 1)
                     GoToDefaultPosition();
 
-                if (Counter >= 200 && Counter % 5 == 0 && Counter <= 320)
+                if (Casting && Counter % 5 == 0)
                 {
-                    int start = Counter - 200;
-                    float distance = start / 2;
-                    int timeLeft = 550 - start * 3;
-                    float offset = Pi / 200 * Math.Abs(60 - start) * Inverter;
-                    int type = ModContent.ProjectileType<Diamond>();
-
-                    Circle(NPC.Center, distance, offset, .01f, 20, type, timeLeft);
+                    float angle = Pi / 125 * (Counter + Main.rand.Next(10));
+                    float speed = Main.rand.NextFloat(3f, 6f);
+                    ShootMany(ModContent.ProjectileType<BasicLargeBallBlue>(), CastingPosition, angle, speed, 2);
                 }
             }
 
-            if (Counter >= 320)
+            if (Counter == 60)
+                Casting = true;
+
+            if (StageHelper < 1)
             {
+                StageHelper = 1;
                 Counter = 0;
-                Inverter *= -1;
+                Casting = false;
             }
+
+            if (Counter >= 500)
+                Counter = 0;
+        }
+
+        public void Stage2()
+        {
+            if (Main.netMode != NetmodeID.MultiplayerClient && StageHelper >= 2) // Only server should spawn bullets and change destination
+            {
+                if (Counter % 300 == 1 || Counter % 300 == 100)
+                {
+                    int side = Counter >= 300 ? -1 : 1;
+                    AlternatingJump(Counter % 300 == 100 ? 0 : side);
+                }
+
+                if (Counter % 300 == 80)
+                {
+                    int spiritCount = 5;
+                    int distance = 120;
+
+                    SpawnExplodingSpirits(CastingPosition, distance, spiritCount, 170);
+                }
+
+                if (Counter % 300 >= 180 && Counter % 3 == 0 && Counter % 300 < 230)
+                {
+                    int start = Counter % 300 - 180;
+                    float angle = Counter >= 300 ? -start * Pi / 400 : start * Pi / 400;
+                    float distance = 40 + start * 8;
+                    int frameToSpeedUp = 150 - start * 2;
+
+                    Circle(CastingPosition, distance, angle, .01f, 20, ModContent.ProjectileType<SpeedUpDiamondBlue>(), 12f + start / 30, frameToSpeedUp);
+                }
+            }
+
+            if (Counter == 60)
+                Casting = true;
+
+            if (StageHelper < 2)
+            {
+                StageHelper = 2;
+                Counter = 0;
+                Casting = false;
+            }
+
+            if (Counter >= 600)
+                Counter = 0;
         }
 
         public void Stage3(Player player)
         {
-            if (Main.netMode != NetmodeID.MultiplayerClient && StageHelper >= 11)
+            if (Main.netMode != NetmodeID.MultiplayerClient && StageHelper >= 3) // Only server should spawn bullets and change destination
             {
-                if (Counter == 1)
-                    GoToDefaultPosition();
-
-                if (Counter >= 50 && Counter % 5 == 0 && Counter <= 175)
+                if (Counter == 120)
                 {
-                    int start = Counter - 50;
-                    float distance = start;
-                    int timeLeft = 550 - start * 3;
-                    float speed = .01f;
-                    int count = Counter < 150 ? 15 : 30;
-                    int type = ModContent.ProjectileType<Diamond>();
-                    SavedRandom += Counter < 150 ? Main.rand.NextFloat(-Pi / 30, Pi / 30) + Pi / 100 * Inverter
-                        : Pi / 100 * -Inverter;
-
-                    Circle(NPC.Center, distance, SavedRandom, speed, count, type, timeLeft, 1);
+                    SpawnSpiralSpirits(player.Center, 240, 8);
+                    SpawnNuke(player.Center, 400 + 100);
                 }
+
+                if (Counter == 240)
+                {
+                    RandomJump();
+                }
+
             }
 
-            if (StageHelper < 11)
+            if (Counter >= 100 && Counter <= 210)
+                Casting = true;
+            else
+                Casting = false;
+
+            if (StageHelper < 3)
             {
-                StageHelper = 11;
+                StageHelper = 3;
                 Counter = 0;
-                Inverter = 1;
+                Casting = false;
             }
 
-            if (Counter >= 300)
-            {
-                SavedRandom = 0;
+            if (Counter >= 450)
                 Counter = 0;
-                Inverter *= -1;
-            }
         }
 
         public void Stage4(Player player)
         {
-            if (Main.netMode != NetmodeID.MultiplayerClient && StageHelper >= 12)
+            if (Main.netMode != NetmodeID.MultiplayerClient && StageHelper >= 4) // Only server should spawn bullets and change destination
             {
-                if (Counter <= 1)
-                    GoToDefaultPosition();
-
-                if (Counter % 60 == 0 && Counter <= 420)
+                if (Counter == 120)
                 {
-                    AlternatingJump(Inverter);
-                    if (Counter % 120 == 60)
-                        Inverter *= -1;
+                    Vector2 defaultPosition = new(0, -350f);
+                    float offset = (defaultPosition + ArenaCenter - NPC.Center).ToRotation();
+                    SpawnThrustingSpirits(CastingPosition, 80, 4, 7, 180, offset);
                 }
 
-                if (Counter >= 120 && Counter % 10 == 0 && Counter % 60 <= 30 && Counter <= 520)
-                {
-                    if (Counter % 60 == 0)
-                        SavedPosition = new(NPC.Center.X, NPC.Center.Y);
-
-                    int start = Counter % 60;
-                    float distance = 50 + start * 5;
-                    int timeLeft = 550 - start;
-                    float speed = .01f;
-                    int count = 18;
-                    int type = ModContent.ProjectileType<Diamond>();
-                    SavedRandom += Main.rand.NextFloat(-Pi / 30, Pi / 30) + Pi / 100 * Inverter;
-
-                    Circle(SavedPosition, distance, SavedRandom, speed, count, type, timeLeft, 2);
-                }
-
-                if (Counter == 480)
-                {
-                    Inverter *= -1;
-                    RunFromArena(Inverter);
-                }
-
-                if (Counter >= 640)
-                    GoToDefaultPosition();
+                if (Counter == 180)
+                    RandomJump();
             }
 
-            if (StageHelper < 12)
+            if (Counter >= 100)
+                Casting = true;
+
+            if (StageHelper < 4)
             {
-                StageHelper = 12;
-                StageLoopCount = 0;
-                Counter = -100;
-                Inverter = -1;
+                StageHelper = 4;
+                Counter = 0;
+                if (Main.netMode != NetmodeID.MultiplayerClient)
+                    GoToDefaultPosition();
+                Casting = false;
             }
 
-            if (Counter >= 1100)
+            if (Counter >= 230)
+                Counter = 0;
+        }
+
+        public void Stage5(Player player)
+        {
+            if (Main.netMode != NetmodeID.MultiplayerClient && StageHelper >= 5) // Only server should spawn bullets and change destination
             {
-                StageLoopCount++;
+                if (Counter == 1)
+                    GoToDefaultPosition();
+
+                if (Counter == 50)
+                {
+                    for (int i = -3; i < 4; i++)
+                    {
+                        float toPlayerAngle = (player.Center - NPC.Center).ToRotation() + MathHelper.PiOver2;
+                        float angle = toPlayerAngle + Pi / 6 * i;
+                        float orbitSpeed = 3f;
+                        Vector2 orbitVelocity = new(MathF.Sin(angle) * orbitSpeed, -MathF.Cos(angle) * orbitSpeed);
+                        SpawnRotatingSpirits(NPC.Center, orbitVelocity, 100, 5, 500);
+                    }
+                }
+                   
+                if (Counter >= 200 && Counter <= 270 && Counter % 5 == 0)
+                {
+                    int start = Counter - 200;
+                    float angle = start * Pi / 160;
+                    float distance = 40 + start * 8;
+                    int frameToSpeedUp = 180 - start * 2;
+
+                    Circle(CastingPosition, distance, angle, .01f, 14, ModContent.ProjectileType<SpeedUpDiamondBlue>(), 5f, frameToSpeedUp, false);
+                } else if (Counter >= 300 && Counter <= 370 && Counter % 5 == 0)
+                {
+                    int start = Counter - 300;
+                    float angle = start * -Pi / 160;
+                    float distance = 40 + start * 8;
+                    int frameToSpeedUp = 180 - start * 2;
+
+                    Circle(CastingPosition, distance, angle, .01f, 14, ModContent.ProjectileType<SpeedUpDiamondBlue>(), 5f, frameToSpeedUp, false);
+                }
+            }
+
+            if (Counter == 1)
+                Casting = true;
+
+            if (StageHelper < 5)
+            {
+                StageHelper = 5;
                 Counter = 0;
             }
+
+            if (Counter >= 400)
+                Counter = 0;
         }
     }
 }

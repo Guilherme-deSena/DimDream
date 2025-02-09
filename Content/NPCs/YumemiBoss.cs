@@ -35,7 +35,6 @@ namespace DimDream.Content.NPCs
         }
         private bool ShouldDrawLine { get; set; }
         private bool LineIsBlinking { get; set; }
-        private bool Moving { get => NPC.velocity.Length() >= 1; }
         private static float Pi { get => MathHelper.Pi; }
         private int Stage
         { // Stage is decided by the boss' health percentage
@@ -177,7 +176,7 @@ namespace DimDream.Content.NPCs
             float angle = (float)Math.Atan2(edge.Y, edge.X);
 
             // Create a rectangle to represent the line
-            Rectangle rectangle = new Rectangle((int)start.X, (int)start.Y, (int)edge.Length(), thickness);
+            Rectangle rectangle = new((int)start.X, (int)start.Y, (int)edge.Length(), thickness);
 
             // Draw the line using a white 1x1 texture and applying the color
             spriteBatch.Draw(TextureAssets.MagicPixel.Value, rectangle, null, color, angle, new Vector2(0, 0.5f), SpriteEffects.None, 0);
@@ -404,7 +403,7 @@ namespace DimDream.Content.NPCs
         public void ShootingFamiliar(float speed, int side)
         {
             Vector2 position = NPC.Center;
-            Vector2 direction = new Vector2(side, -1f);
+            Vector2 direction = new(side, -1f);
 
             int damage = (int)(ProjDamage * .9);
             int type = ModContent.ProjectileType<ShootingFamiliar>();
@@ -414,7 +413,7 @@ namespace DimDream.Content.NPCs
 
         public void SimpleMovement()
         {
-            Vector2 MoveOffset = new Vector2(Main.rand.Next(-400, 400), Main.rand.Next(-50, 50) - 350f);
+            Vector2 MoveOffset = new(Main.rand.Next(-400, 400), Main.rand.Next(-50, 50) - 350f);
 
             Destination = ArenaCenter + MoveOffset;
             NPC.netUpdate = true; // Update Destination to every client so they know where the boss should move towards
@@ -455,7 +454,7 @@ namespace DimDream.Content.NPCs
                 }
             }
 
-            ShouldDrawLine = Counter < 200 ? true : false;
+            ShouldDrawLine = Counter < 200;
 
             if (Counter >= 800)
                 Counter = 0;
@@ -488,7 +487,7 @@ namespace DimDream.Content.NPCs
                 }
             }
 
-            ShouldDrawLine = Counter < 200 ? true : false;
+            ShouldDrawLine = Counter < 200;
 
             if (Counter >= 1080 || !TransitionedToStage[1])
             {
@@ -598,7 +597,7 @@ namespace DimDream.Content.NPCs
                 }
             }
 
-            ShouldDrawLine = Counter < 210 ? true : false;
+            ShouldDrawLine = Counter < 210;
 
             if (Counter >= 600 || !TransitionedToStage[4])
             {

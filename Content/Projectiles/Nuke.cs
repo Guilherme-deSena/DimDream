@@ -1,29 +1,25 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Terraria.Audio;
-using Terraria.GameContent;
 using Terraria.ID;
-using Terraria;
 using Terraria.ModLoader;
-using Microsoft.Xna.Framework;
+using Terraria;
+using Microsoft.Xna.Framework.Graphics;
+using Terraria.GameContent;
+using static Terraria.GameContent.Animations.Actions.Sprites;
 
 namespace DimDream.Content.Projectiles
 {
-    internal class Rice : ModProjectile
+    internal class Nuke : ModProjectile
     {
-        public float MaxSpeed
+        public float Scale
         {
             get => Projectile.ai[0];
             set => Projectile.ai[0] = value;
-        }
-        public float Behavior
-        {
-            get => Projectile.ai[1];
-            set => Projectile.ai[1] = value;
         }
         public int ParentIndex
         {
@@ -49,21 +45,17 @@ namespace DimDream.Content.Projectiles
             get => (int)Projectile.localAI[2];
             set => Projectile.localAI[2] = value;
         }
-        public override void SetStaticDefaults()
-        {
-            Main.projFrames[Projectile.type] = 2;
-        }
 
         public override void SetDefaults()
         {
-            Projectile.width = 10;
-            Projectile.height = 10;
-            DrawOffsetX = -3;
-            DrawOriginOffsetY = -8;
+            Projectile.width = 150;
+            Projectile.height = 150;
+            DrawOffsetX = -35;
+            DrawOriginOffsetY = -45;
             Projectile.alpha = 255;
-            Projectile.timeLeft = 350;
+            Projectile.timeLeft = 100;
             Projectile.friendly = false;
-            Projectile.hostile = true;
+            Projectile.hostile = false;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.netImportant = true;
@@ -78,10 +70,66 @@ namespace DimDream.Content.Projectiles
             return Color.White * Projectile.Opacity;
         }
 
+        
+        public override bool PreDraw(ref Color lightColor)
+        {
+            if (Projectile.timeLeft > 150)
+            {
+                Projectile.hostile = false;
+                return false;
+            } else
+            {
+                Projectile.hostile = true;
+            }
+
+            Texture2D texture = TextureAssets.Projectile[Projectile.type].Value;
+            Vector2 drawOrigin = texture.Size() / 2f;
+            Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+
+            // Draw projectile with calculated scale
+            Main.spriteBatch.Draw(texture, drawPosition, null, Color.White * Projectile.Opacity,
+                Projectile.rotation, drawOrigin, Scale, SpriteEffects.None, 0f);
+
+            return false; // Return false to prevent default drawing
+        }
+
+        public override void AI()
+        {
+            if (Projectile.timeLeft > 150)
+                return;
+
+            FadeInAndOut();
+            Counter++;
+
+            if (!Initialized)
+            {
+                Initialized = true;
+                ParentStageHelper = (int)Main.npc[ParentIndex].localAI[2];
+                SoundEngine.PlaySound(SoundID.Item8, Projectile.position);
+            }
+
+            Despawn();
+
+
+            Visuals();
+        }
+
+        public bool Despawn()
+        {
+            NPC parent = Main.npc[ParentIndex];
+            if (Main.netMode != NetmodeID.MultiplayerClient && Counter > 20 &&
+                (!HasParent || (parent.dontTakeDamage && parent.localAI[2] >= 1) || (int)parent.localAI[2] != ParentStageHelper || !Main.npc[ParentIndex].active))
+            {
+                Projectile.timeLeft = Math.Min(Projectile.timeLeft, 20);
+                NetMessage.SendData(MessageID.SyncProjectile, number: Projectile.whoAmI);
+                return true;
+            }
+            return false;
+        }
         private void FadeInAndOut()
         {
             // Fade in (we have Projectile.alpha = 255 in SetDefaults which means it spawns transparent)
-            int fadeSpeed = 30;
+            int fadeSpeed = 10;
             if (!FadedIn && Projectile.alpha > 0)
             {
                 Projectile.alpha -= fadeSpeed;
@@ -102,55 +150,14 @@ namespace DimDream.Content.Projectiles
             }
         }
 
-        public override void AI()
-        {
-            FadeInAndOut();
-            Counter++;
-
-
-            if (!Initialized)
-            {
-                Initialized = true;
-                ParentStageHelper = (int)Main.npc[ParentIndex].localAI[2];
-                SoundEngine.PlaySound(SoundID.Item8, Projectile.position);
-            }
-
-            Despawn();
-
-            if (Projectile.velocity.Length() < MaxSpeed && (Behavior != 1 || Projectile.timeLeft < 400))
-            {
-                float acceleration = MaxSpeed / 80;
-                Projectile.velocity *= 1f + acceleration / Projectile.velocity.Length();
-            }
-
-            Visuals();
-        }
-
-        public bool Despawn()
-        {
-            NPC parent = Main.npc[ParentIndex];
-            if (Main.netMode != NetmodeID.MultiplayerClient && Counter > 20 &&
-                (!HasParent || (parent.dontTakeDamage && parent.localAI[2] >= 1) || (int)parent.localAI[2] != ParentStageHelper || !Main.npc[ParentIndex].active))
-            {
-                Projectile.timeLeft = Math.Min(Projectile.timeLeft, 20);
-                NetMessage.SendData(MessageID.SyncProjectile, number: Projectile.whoAmI);
-                return true;
-            }
-            return false;
-        }
-
         private void Visuals()
         {
-            if (Behavior == 1)
-                Projectile.frame = 1;
-            else
-                Projectile.frame = 0;
-
             FadeInAndOut();
 
-            // If the sprite points upwards, this will make it point towards the move direction (for other sprite orientations, change MathHelper.PiOver2)
-            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
-            Projectile.spriteDirection = Projectile.direction;
+            if (Scale < 1 && Projectile.timeLeft > 30)
+                Scale += .02f;
+            else
+                Scale -= .02f;
         }
     }
 }

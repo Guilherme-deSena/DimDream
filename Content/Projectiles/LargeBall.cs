@@ -16,7 +16,7 @@ namespace DimDream.Content.Projectiles
     internal class LargeBallRed : ModProjectile
     {
         public override string Texture => "DimDream/Content/Projectiles/LargeBallRed";
-        private float Behavior // Set to 1 when creating the proj for speed up behavior
+        private float Behavior // 1 for speed up, 2 for slow down
         {
             get => Projectile.ai[0];
             set => Projectile.ai[0] = value;
@@ -117,6 +117,10 @@ namespace DimDream.Content.Projectiles
                 float acceleration = .05f;
                 Projectile.velocity *= 1f + acceleration / Projectile.velocity.Length();
             }
+            else if (Behavior == 2f && Counter == 6)
+            {
+                Projectile.velocity /= 2;
+            }
 
         // If the sprite points upwards, this will make it point towards the move direction (for other sprite orientations, change MathHelper.PiOver2)
         Projectile.rotation = Projectile.velocity.ToRotation();
@@ -126,7 +130,7 @@ namespace DimDream.Content.Projectiles
         public bool Despawn()
         {
             NPC parent = Main.npc[ParentIndex];
-            if (Main.netMode != NetmodeID.MultiplayerClient &&
+            if (Main.netMode != NetmodeID.MultiplayerClient && Counter > 20 &&
                 (!HasParent || (parent.dontTakeDamage && parent.localAI[2] >= 1) || (int)parent.localAI[2] != ParentStageHelper || !Main.npc[ParentIndex].active))
             {
                 Projectile.timeLeft = Math.Min(Projectile.timeLeft, 20);

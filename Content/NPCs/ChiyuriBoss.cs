@@ -28,7 +28,7 @@ namespace DimDream.Content.NPCs
         private Vector2 ArenaCenter { get; set; }
         private Vector2 CenterPosition { get; set; }
 		private Vector2 Destination {
-			get => new Vector2(NPC.ai[2], NPC.ai[3]);
+			get => new(NPC.ai[2], NPC.ai[3]);
 			set {
 				NPC.ai[2] = value.X;
 				NPC.ai[3] = value.Y;
@@ -107,7 +107,7 @@ namespace DimDream.Content.NPCs
 
         public override void ModifyNPCLoot(NPCLoot npcLoot) {
             // All the Classic Mode drops here are based on "not expert", meaning we use .OnSuccess() to add them into the rule, which then gets added
-            LeadingConditionRule notExpertRule = new LeadingConditionRule(new Conditions.NotExpert());
+            LeadingConditionRule notExpertRule = new(new Conditions.NotExpert());
 
 			// Notice we use notExpertRule.OnSuccess instead of npcLoot.Add so it only applies in normal mode
 			notExpertRule.OnSuccess(ItemDropRule.OneFromOptions(1, [ModContent.ItemType<FlowingBow>(), ModContent.ItemType<RippleStaff>()]));
@@ -123,11 +123,11 @@ namespace DimDream.Content.NPCs
         }
 
         public override void SetBestiary(BestiaryDatabase database, BestiaryEntry bestiaryEntry) {
-			// Sets the description of this NPC that is listed in the bestiary
-			bestiaryEntry.Info.AddRange(new List<IBestiaryInfoElement> {
+            // Sets the description of this NPC that is listed in the bestiary
+            bestiaryEntry.Info.AddRange([
 				new MoonLordPortraitBackgroundProviderBestiaryInfoElement(), // Plain black background
 				new FlavorTextBestiaryInfoElement("Crew member for the Probability Space Hypervessel, currently helping Yumemi find proof of the existence of magic.")
-			});
+			]);
 		}
 
 		public override bool CanHitPlayer(Player target, ref int cooldownSlot) {
@@ -140,7 +140,7 @@ namespace DimDream.Content.NPCs
 		}
 
 		public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor) {
-			Vector2 offset = new Vector2(113, 113); // Offset to position texture correctly around the boss. Usually half the texture's size
+			Vector2 offset = new(113, 113); // Offset to position texture correctly around the boss. Usually half the texture's size
 			float alphaChange = .1f; // How much is the opacity going to change every frame during fade-in/fade-out
 
 			if (Stage == 3 && Counter > 390)
@@ -180,8 +180,8 @@ namespace DimDream.Content.NPCs
 
 			// At the first frame of every stage cycle, change the boss' destination
 			if (Counter == 1 && Main.netMode != NetmodeID.MultiplayerClient) {
-                CenterPosition = new Vector2(ArenaCenter.X, ArenaCenter.Y - 320f);
-                Vector2 MoveOffset = new Vector2(Main.rand.Next(-200, 200), Main.rand.Next(-50, 50));
+                CenterPosition = new(ArenaCenter.X, ArenaCenter.Y - 320f);
+                Vector2 MoveOffset = new(Main.rand.Next(-200, 200), Main.rand.Next(-50, 50));
 				Destination = CenterPosition + MoveOffset;
                 NPC.netUpdate = true; // Update Destination to every client so they know where the boss should move towards
 			}
@@ -201,9 +201,9 @@ namespace DimDream.Content.NPCs
 
 			
 			switch (Stage) {
-				case 0: Stage0(player); break;
+				case 0: Stage0(); break;
 				case 1: Stage1(); break;
-				case 2: Stage2(player); break;
+				case 2: Stage2(); break;
 				case 3: Stage3(); break;
 			}
 
@@ -261,26 +261,26 @@ namespace DimDream.Content.NPCs
             {
                 float distance = Vector2.Distance(arenaCenter, player.Center);
                 bool isTooDistant = distance > pullDistance && distance < fightDistance;
-                if (player.active && !player.dead && Vector2.Distance(arenaCenter, player.Center) > pullDistance)
+                if (player.active && !player.dead && isTooDistant)
                 {
-                    Vector2 directionToNPC = NPC.Center - player.Center;
+                    Vector2 directionToArena = arenaCenter - player.Center;
 
-                    directionToNPC.Normalize();
-                    directionToNPC *= pullStrength;
+                    directionToArena.Normalize();
+                    directionToArena *= pullStrength;
 
-                    player.velocity = directionToNPC;
+                    player.velocity = directionToArena;
                 }
             }
         }
 
         // bulletType is the type of projectile the familiar shoots. 0 for white spore, 1 for ring line.
         // bulletCount is how many bullets each burst has (if the projectile uses bursts). Unused for white spore.
-        public void AimedFamiliars(Player player, int bulletType = 0)
+        public void AimedFamiliars(int bulletType = 0)
         {
             for (int i = 0; i < 2; i++)
             {
                 int side = i == 0 ? 1 : -1;
-                Vector2 direction = new Vector2(side, -0.5f);
+                Vector2 direction = new(side, -0.5f);
                 float speed = 8f;
                 int type = ModContent.ProjectileType<ShootingFamiliar>();
                 int damage = (int)(ProjDamage * .8);
@@ -293,7 +293,7 @@ namespace DimDream.Content.NPCs
         public void TopRandomSpore()
         {
             Vector2 position = NPC.Top + new Vector2(Main.rand.Next(-1200, 1200), -1200 + Main.rand.Next(-100, 100));
-            Vector2 direction = new Vector2(Main.rand.NextFloat(-1, 1), 1);
+            Vector2 direction = new(Main.rand.NextFloat(-1, 1), 1);
 
             float speed = Main.rand.NextFloat(2f, 7f);
             int type = ModContent.ProjectileType<WhiteSpore>();
@@ -334,7 +334,7 @@ namespace DimDream.Content.NPCs
         {
             for (int i = 0; i < 4; i++)
             {
-                Vector2 positionOffset = new Vector2((float)Math.Sin(Pi / 2 * i) * 100, (float)Math.Cos(Pi / 2 * i) * 100);
+                Vector2 positionOffset = new((float)Math.Sin(Pi / 2 * i) * 100, (float)Math.Cos(Pi / 2 * i) * 100);
                 Vector2 position = NPC.Center + positionOffset;
                 Vector2 direction = positionOffset.SafeNormalize(Vector2.UnitY);
                 Vector2 direction2 = direction.RotatedBy(offset);
@@ -351,7 +351,7 @@ namespace DimDream.Content.NPCs
         public void BlueLaser()
         {
             Vector2 position = NPC.Center + new Vector2(Main.rand.Next(-1400, 1400), 1200);
-            Vector2 direction = new Vector2(Main.rand.NextFloat(-0.3f, 0.3f), -1);
+            Vector2 direction = new(Main.rand.NextFloat(-0.3f, 0.3f), -1);
 
             int type = ModContent.ProjectileType<BlueLaser>();
             int damage = ProjDamage;
@@ -378,7 +378,7 @@ namespace DimDream.Content.NPCs
 
         }
 
-        public void Stage0(Player player)
+        public void Stage0()
         {
             if (Main.netMode != NetmodeID.MultiplayerClient)
             { // Only server should spawn bullets
@@ -390,7 +390,7 @@ namespace DimDream.Content.NPCs
                     BlueLaser();
 
                 if (Counter == 150)
-                    AimedFamiliars(player);
+                    AimedFamiliars();
 
             }
             if (Counter > 300)
@@ -441,7 +441,7 @@ namespace DimDream.Content.NPCs
             }
         }
 
-        public void Stage2(Player player)
+        public void Stage2()
         {
             if (Main.netMode != NetmodeID.MultiplayerClient && TransitionedToStage[2])
             {
@@ -451,7 +451,7 @@ namespace DimDream.Content.NPCs
                     TopRandomSpore();
 
                 if (Counter % 200 == 0)
-                    AimedFamiliars(player, 1);
+                    AimedFamiliars(1);
 
                 if (Counter >= 200 && Counter % 15 == 0)
                     BlueLaser();

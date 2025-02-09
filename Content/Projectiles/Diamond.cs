@@ -15,13 +15,13 @@ namespace DimDream.Content.Projectiles
 {
     public class Diamond : ModProjectile
     {
-        private float Behavior // Set to 1 when creating the proj for speed up behavior
+        private float MaxSpeed
         {
             get => Projectile.ai[0];
             set => Projectile.ai[0] = value;
         }
 
-        private float SpriteBehavior
+        private float Behavior
         {
             get => Projectile.ai[1];
             set => Projectile.ai[1] = value;
@@ -119,10 +119,11 @@ namespace DimDream.Content.Projectiles
 
             Despawn();
 
-            float maxSpeed = 12f;
-            if (Behavior == 1f && Projectile.velocity.Length() < maxSpeed && Projectile.timeLeft <= 150)
+            if (Projectile.velocity.Length() < MaxSpeed &&
+                ((Behavior < 150 && Projectile.timeLeft < 150) ||
+                (Behavior >= 150 && Projectile.timeLeft < Behavior)))
             {
-                float acceleration = .1f;
+                float acceleration = MaxSpeed / 80;
                 Projectile.velocity *= 1f + acceleration / Projectile.velocity.Length();
             }
 
@@ -131,7 +132,7 @@ namespace DimDream.Content.Projectiles
         public bool Despawn()
         {
             NPC parent = Main.npc[ParentIndex];
-            if (Main.netMode != NetmodeID.MultiplayerClient &&
+            if (Main.netMode != NetmodeID.MultiplayerClient && Counter > 20 &&
                 (!HasParent || (parent.dontTakeDamage && parent.localAI[2] >= 1) || (int)parent.localAI[2] != ParentStageHelper || !Main.npc[ParentIndex].active))
             {
                 Projectile.timeLeft = Math.Min(Projectile.timeLeft, 20);
@@ -143,7 +144,7 @@ namespace DimDream.Content.Projectiles
 
         private void Visuals()
         {
-            if (SpriteBehavior == 1f || (SpriteBehavior == 2f && Projectile.velocity.Length() <= .1f))
+            if (Behavior == 1f || (Behavior == 2f && Projectile.velocity.Length() <= .1f))
                 Projectile.frame = 1;
             else
                 Projectile.frame = 0;

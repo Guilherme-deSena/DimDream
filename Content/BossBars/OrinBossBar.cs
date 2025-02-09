@@ -54,7 +54,7 @@ namespace DimDream.Content.BossBars
             int stageHelper = (int)npc.localAI[2];
             int currentHealthBar = stageHelper / 10;
             int LastHealthBar = 1;
-            Vector2 barStart = new Vector2(drawParams.BarCenter.X - barWidth / 2, drawParams.BarCenter.Y - barHeight / 2);
+            Vector2 barStart = new(drawParams.BarCenter.X - barWidth / 2, drawParams.BarCenter.Y - barHeight / 2);
             Vector2 healthStart = new(barStart.X + 32, barStart.Y + 12);
 
             // Draw segments in healthbars

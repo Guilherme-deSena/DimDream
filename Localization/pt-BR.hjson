@@ -18,6 +18,15 @@ Mods: {
 			// OrinEvilSpiritRed.DisplayName: Orin Evil Spirit Red
 			// OrinBossCat.DisplayName: Orin Boss Cat
 			// OrinBossHumanoid.DisplayName: Orin Boss Humanoid
+			// FairyZombie.DisplayName: Fairy Zombie
+			// OrinFairyZombie.DisplayName: Orin Fairy Zombie
+			// OrinFairyZombieGhostly.DisplayName: Orin Fairy Zombie Ghostly
+			// OrinEvilSpiritExplode.DisplayName: Orin Evil Spirit Explode
+			// OrinEvilSpiritSpiral.DisplayName: Orin Evil Spirit Spiral
+			// OrinEvilSpiritBurst.DisplayName: Orin Evil Spirit Burst
+			// OrinEvilSpiritCircleStill.DisplayName: Orin Evil Spirit Circle Still
+			// OrinEvilSpiritCircleThrust.DisplayName: Orin Evil Spirit Circle Thrust
+			// OrinEvilSpiritRotating.DisplayName: Orin Evil Spirit Rotating
 		}
 
 		Items: {
@@ -117,6 +126,23 @@ Mods: {
 			// Diamond.DisplayName: Diamond
 			// DiamondBlue.DisplayName: Diamond Blue
 			// DiamondRed.DisplayName: Diamond Red
+			// SpiralBullet.DisplayName: Spiral Bullet
+			// OrinWhiteSpore.DisplayName: Orin White Spore
+			// Nuke.DisplayName: Nuke
+			// SpeedUpBullet.DisplayName: Speed Up Bullet
+			// SpeedUpDiamondBlue.DisplayName: Speed Up Diamond Blue
+			// SpeedUpDiamondChangeColor.DisplayName: Speed Up Diamond Change Color
+			// SpeedUpDiamondRed.DisplayName: Speed Up Diamond Red
+			// SpeedUpRiceRed.DisplayName: Speed Up Rice Red
+			// BasicBullet.DisplayName: Basic Bullet
+			// BasicLargeBallBlue.DisplayName: Basic Large Ball Blue
+			// SpeedUpLargeBallBlue.DisplayName: Speed Up Large Ball Blue
+			// SpeedUpLargeBallRed.DisplayName: Speed Up Large Ball Red
+			// BasicWhiteSpore.DisplayName: Basic White Spore
+			// BasicSpiralBullet.DisplayName: Basic Spiral Bullet
+			// SlowDownBullet.DisplayName: Slow Down Bullet
+			// SlowDownLargeBallBlue.DisplayName: Slow Down Large Ball Blue
+			// SpeedUpRiceBlue.DisplayName: Speed Up Rice Blue
 		}
 
 		Buffs: {

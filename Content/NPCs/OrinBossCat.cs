@@ -23,10 +23,18 @@ namespace DimDream.Content.NPCs
     [AutoloadBossHead] // This attribute looks for a texture called "ClassName_Head_Boss" and automatically registers it as the NPC boss head icon
     internal class OrinBossCat : ModNPC
     {
-        private bool Initialized { get; set; } = false;
-        private int Inverter { get; set; } = 1;
-        private Vector2 ArenaCenter { get; set; }
-        private Vector2 Destination
+        public bool Initialized { get; set; } = false;
+        public int Inverter { get; set; } = 1;
+        public Vector2 ArenaCenter
+        {
+            get => new(NPC.localAI[0], NPC.localAI[1]);
+            set
+            {
+                NPC.localAI[0] = value.X;
+                NPC.localAI[1] = value.Y;
+            }
+        }
+        public Vector2 Destination
         {
             get => new(NPC.ai[2], NPC.ai[3]);
             set
@@ -35,9 +43,9 @@ namespace DimDream.Content.NPCs
                 NPC.ai[3] = value.Y;
             }
         }
-        private bool Moving { get => NPC.velocity.Length() > .5; }
-        private static float Pi { get => MathHelper.Pi; } // Shorter way to write Pi because I'm too lazy to write Mathhelper everytime
-        private int Stage
+        public bool Moving { get => NPC.velocity.Length() > .5; }
+        public static float Pi { get => MathHelper.Pi; } // Shorter way to write Pi because I'm too lazy to write Mathhelper everytime
+        public int Stage
         { // Stage is decided by the boss' health percentage
             get
             {
@@ -56,20 +64,16 @@ namespace DimDream.Content.NPCs
                 return 4;
             }
         }
-        private int StageLoopCount
-        {
-            get => (int)NPC.localAI[1];
-            set => NPC.localAI[1] = value;
-        }
-        private int StageHelper // Checked to prevent starting a stage during a pattern, amidst other things
+        public int StageLoopCount { get; set; } = 0;
+        public int StageHelper // Checked to prevent starting a stage during a pattern, amidst other things
         {
             get => (int)NPC.localAI[2];
             set => NPC.localAI[2] = value;
         }
-        private int RevivingIntoStage { get; set; } = 0;
-        private float SavedRandom { get; set; } = 0; // Used to keep a random float between frames
-        private Vector2 SavedPosition { get; set; } // Used to keep a position between frames
-        private int ProjDamage
+        public int RevivingIntoStage { get; set; } = 0;
+        public float SavedRandom { get; set; } = 0; // Used to keep a random float between frames
+        public Vector2 SavedPosition { get; set; } // Used to keep a position between frames
+        public int ProjDamage
         {
             get
             {
@@ -82,7 +86,7 @@ namespace DimDream.Content.NPCs
                 return NPC.damage;
             }
         }
-        private int Counter
+        public int Counter
         {
             get => (int)NPC.localAI[3];
             set => NPC.localAI[3] = value;
@@ -380,10 +384,10 @@ namespace DimDream.Content.NPCs
 
         public void SpawnCircleSpirit(Vector2 position)
         {
-            int type = ModContent.NPCType<OrinEvilSpiritRed>();
+            int type = ModContent.NPCType<OrinEvilSpiritCircleStill>();
             var entitySource = NPC.GetSource_FromAI();
 
-            OrinEvilSpiritRed spirit = (OrinEvilSpiritRed)NPC.NewNPCDirect(entitySource, (int)position.X, (int)position.Y, type, NPC.whoAmI).ModNPC;
+            OrinEvilSpiritCircleStill spirit = (OrinEvilSpiritCircleStill)NPC.NewNPCDirect(entitySource, (int)position.X, (int)position.Y, type, NPC.whoAmI).ModNPC;
             spirit.ParentIndex = NPC.whoAmI;
         }
 
@@ -395,18 +399,18 @@ namespace DimDream.Content.NPCs
                 Vector2 position = new(NPC.Center.X + MathF.Sin(angle) * distance, NPC.Center.Y - MathF.Cos(angle) * distance);
                 Vector2 velocity = new Vector2(0, -1).RotatedBy(angle);
                 float speed = .1f;
-                int type = ModContent.NPCType<OrinEvilSpiritBlue>();
+                int type = ModContent.NPCType<OrinEvilSpiritBurst>();
                 var entitySource = NPC.GetSource_FromAI();
 
                 NPC spirit = NPC.NewNPCDirect(entitySource, position, type, NPC.whoAmI, timeLeft);
                 spirit.velocity = -velocity * speed;
                 
-                OrinEvilSpiritBlue s = (OrinEvilSpiritBlue)spirit.ModNPC;
+                OrinEvilSpiritBurst s = (OrinEvilSpiritBurst)spirit.ModNPC;
                 s.ParentIndex = NPC.whoAmI;
             }
         }
 
-        public void Circle(Vector2 center, float distance, float offset, float speed, int count, int type, int timeLeft = -1, int color = 0)
+        public void Circle(Vector2 center, float distance, float offset, float speed, int count, int type, int frameToSpeedUp = 0)
         {
             for (int i = 0; i < count; i++)
             {
@@ -417,10 +421,7 @@ namespace DimDream.Content.NPCs
                 var entitySource = NPC.GetSource_FromAI();
                 int damage = ProjDamage;
 
-                Projectile p = Projectile.NewProjectileDirect(entitySource, positionOffset, velocity * speed, type, damage, 0f, Main.myPlayer, 1f, color, NPC.whoAmI);
-                
-                if (timeLeft >= 0)
-                    p.timeLeft = timeLeft;
+                Projectile p = Projectile.NewProjectileDirect(entitySource, positionOffset, velocity * speed, type, damage, 0f, Main.myPlayer, 10f, frameToSpeedUp, NPC.whoAmI);
             }
         }
 
@@ -497,7 +498,7 @@ namespace DimDream.Content.NPCs
                     int spiritCount = 0;
                     foreach (var otherNPC in Main.ActiveNPCs)
                     {
-                        if (otherNPC.type == ModContent.NPCType<OrinEvilSpiritRed>())
+                        if (otherNPC.type == ModContent.NPCType<OrinEvilSpiritCircleStill>())
                             spiritCount++;
                     }
 
@@ -538,10 +539,10 @@ namespace DimDream.Content.NPCs
                 if (Counter > 400 && Counter % 10 == 0 && Counter < 900)
                 {
                     float angle = Counter <= 500 ? 0 : MathF.Sin(Counter - 500) + Main.rand.NextFloat(Pi/20);
-                    int distance = (int)Math.Abs(650 - Counter);
-                    int type = ModContent.ProjectileType<Rice>();
+                    int distance = Math.Abs(650 - Counter);
+                    int type = ModContent.ProjectileType<SpeedUpRiceRed>();
 
-                    Circle(NPC.Center, distance, angle, .5f, 16, type);
+                    Circle(NPC.Center, distance, angle, .5f, 16, type, 20);
 
                     angle = MathF.Sin(Counter - 400) + Main.rand.NextFloat(Pi / 20);
                     if (Counter < 650 && Counter % 20 == 0)
@@ -571,11 +572,11 @@ namespace DimDream.Content.NPCs
                 {
                     int start = Counter - 200;
                     float distance = start / 2;
-                    int timeLeft = 550 - start * 3;
+                    int frameToSpeedUp = 400 - start * 3;
                     float offset = Pi / 200 * Math.Abs(60 - start) * Inverter;
-                    int type = ModContent.ProjectileType<Diamond>();
+                    int type = ModContent.ProjectileType<SpeedUpDiamondBlue>();
 
-                    Circle(NPC.Center, distance, offset, .01f, 20, type, timeLeft);
+                    Circle(NPC.Center, distance, offset, .01f, 20, type, frameToSpeedUp);
                 }
             }
 
@@ -597,14 +598,14 @@ namespace DimDream.Content.NPCs
                 {
                     int start = Counter - 50;
                     float distance = start;
-                    int timeLeft = 550 - start * 3;
+                    int frameToSpeedUp = 400 - start * 3;
                     float speed = .01f;
                     int count = Counter < 150 ? 15 : 30;
-                    int type = ModContent.ProjectileType<Diamond>();
+                    int type = ModContent.ProjectileType<SpeedUpDiamondRed>();
                     SavedRandom += Counter < 150 ? Main.rand.NextFloat(-Pi / 30, Pi / 30) + Pi / 100 * Inverter 
                         : Pi / 100 * -Inverter;
 
-                    Circle(NPC.Center, distance, SavedRandom, speed, count, type, timeLeft, 1);
+                    Circle(NPC.Center, distance, SavedRandom, speed, count, type, frameToSpeedUp);
                 }
             }
 
@@ -644,13 +645,13 @@ namespace DimDream.Content.NPCs
 
                     int start = Counter % 60;
                     float distance = 50 + start * 5;
-                    int timeLeft = 550 - start;
+                    int frameToSpeedUp = 400 - start;
                     float speed = .01f;
                     int count = 18;
-                    int type = ModContent.ProjectileType<Diamond>();
+                    int type = ModContent.ProjectileType<SpeedUpDiamondChangeColor>();
                     SavedRandom += Main.rand.NextFloat(-Pi / 30, Pi / 30) + Pi / 100 * Inverter;
 
-                    Circle(SavedPosition, distance, SavedRandom, speed, count, type, timeLeft, 2);
+                    Circle(SavedPosition, distance, SavedRandom, speed, count, type, frameToSpeedUp);
                 }
 
                 if (Counter == 480)

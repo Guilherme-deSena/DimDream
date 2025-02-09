@@ -13,17 +13,12 @@ using Microsoft.Xna.Framework;
 
 namespace DimDream.Content.Projectiles
 {
-    internal class Rice : ModProjectile
+    internal class SpiralBullet : ModProjectile
     {
-        public float MaxSpeed
+        private float Behavior // Set to 1 when creating the proj for speed up behavior
         {
             get => Projectile.ai[0];
             set => Projectile.ai[0] = value;
-        }
-        public float Behavior
-        {
-            get => Projectile.ai[1];
-            set => Projectile.ai[1] = value;
         }
         public int ParentIndex
         {
@@ -32,6 +27,7 @@ namespace DimDream.Content.Projectiles
         }
         public bool HasParent => ParentIndex > -1;
         public int ParentStageHelper { get; set; }
+
         private bool FadedIn
         {
             get => Projectile.localAI[0] == 1f;
@@ -49,17 +45,14 @@ namespace DimDream.Content.Projectiles
             get => (int)Projectile.localAI[2];
             set => Projectile.localAI[2] = value;
         }
-        public override void SetStaticDefaults()
-        {
-            Main.projFrames[Projectile.type] = 2;
-        }
+
 
         public override void SetDefaults()
         {
-            Projectile.width = 10;
-            Projectile.height = 10;
+            Projectile.width = 6;
+            Projectile.height = 6;
             DrawOffsetX = -3;
-            DrawOriginOffsetY = -8;
+            DrawOriginOffsetY = -3;
             Projectile.alpha = 255;
             Projectile.timeLeft = 350;
             Projectile.friendly = false;
@@ -104,10 +97,6 @@ namespace DimDream.Content.Projectiles
 
         public override void AI()
         {
-            FadeInAndOut();
-            Counter++;
-
-
             if (!Initialized)
             {
                 Initialized = true;
@@ -117,13 +106,19 @@ namespace DimDream.Content.Projectiles
 
             Despawn();
 
-            if (Projectile.velocity.Length() < MaxSpeed && (Behavior != 1 || Projectile.timeLeft < 400))
+            FadeInAndOut();
+            Counter++;
+
+
+            float maxSpeed = 6f;
+            if (Behavior == 1f && Counter > 20 && Projectile.velocity.Length() < maxSpeed)
             {
-                float acceleration = MaxSpeed / 80;
+                float acceleration = .05f;
                 Projectile.velocity *= 1f + acceleration / Projectile.velocity.Length();
             }
 
-            Visuals();
+            // If the sprite points upwards, this will make it point towards the move direction (for other sprite orientations, change MathHelper.PiOver2)
+            Projectile.rotation += .01f * Projectile.velocity.Length();
         }
 
         public bool Despawn()
@@ -137,20 +132,6 @@ namespace DimDream.Content.Projectiles
                 return true;
             }
             return false;
-        }
-
-        private void Visuals()
-        {
-            if (Behavior == 1)
-                Projectile.frame = 1;
-            else
-                Projectile.frame = 0;
-
-            FadeInAndOut();
-
-            // If the sprite points upwards, this will make it point towards the move direction (for other sprite orientations, change MathHelper.PiOver2)
-            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
-            Projectile.spriteDirection = Projectile.direction;
         }
     }
 }
