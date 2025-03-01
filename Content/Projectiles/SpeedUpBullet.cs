@@ -117,7 +117,7 @@ namespace DimDream.Content.Projectiles
             }
         }
 
-        public bool Despawn()
+        public void Despawn()
         {
             NPC parent = Main.npc[ParentIndex];
             Vector2 arenaCenter = new(parent.localAI[0], parent.localAI[1]);
@@ -127,9 +127,7 @@ namespace DimDream.Content.Projectiles
             {                
                 Projectile.timeLeft = 20;
                 NetMessage.SendData(MessageID.SyncProjectile, number: Projectile.whoAmI);
-                return true;
             }
-            return false;
         }
     }
 
