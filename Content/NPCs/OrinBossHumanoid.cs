@@ -52,27 +52,28 @@ namespace DimDream.Content.NPCs
         {
             get
             {
-                if (NPC.life > NPC.lifeMax * .5f)
-                    return 4;
-
-                return 5;
-                /*
-                if (StageHelper <= 0)
+                if (StageHelper < 9 && NPC.life > NPC.lifeMax * .6f)
                     return 0;
 
-                if (StageHelper <= 1)
+                if (StageHelper < 9)
                     return 1;
 
-                if (NPC.life > NPC.lifeMax * .8f)
+                if (StageHelper < 19 && NPC.life > NPC.lifeMax * .6f)
                     return 2;
 
-                if (NPC.life > NPC.lifeMax * .5f)
+                if (StageHelper < 19)
                     return 3;
 
-                return 4;*/
+                if (StageHelper < 29 && NPC.life > NPC.lifeMax * .55f)
+                    return 4;
+
+                if (StageHelper < 29)
+                    return 5;
+
+                return 6;
             }
         }
-        public int StageLoopCount { get; set; } = 0;
+        public bool ShouldMoveSpellName { get; set; } = true;
         public int StageHelper // Checked to prevent starting a stage during a pattern, amidst other things
         {
             get => (int)NPC.localAI[2];
@@ -98,6 +99,21 @@ namespace DimDream.Content.NPCs
                 return NPC.damage;
             }
         }
+
+        public int RawDamage
+        {
+            get
+            {
+                if (Main.masterMode)
+                    return NPC.damage * 3;
+
+                if (Main.expertMode)
+                    return NPC.damage * 2;
+
+                return NPC.damage;
+            }
+        }
+
         public int Counter
         {
             get => (int)NPC.localAI[3];
@@ -118,9 +134,9 @@ namespace DimDream.Content.NPCs
         {
             NPC.width = 92;
             NPC.height = 78;
-            NPC.damage = 45;
+            NPC.damage = 48;
             NPC.defense = 22;
-            NPC.lifeMax = Main.expertMode ? 15000 : 20000;
+            NPC.lifeMax = GetRawHealth(45000, 30000, 27000);
             NPC.HitSound = SoundID.NPCHit1;
             NPC.DeathSound = SoundID.NPCDeath1;
             NPC.knockBackResist = 0f;
@@ -130,7 +146,7 @@ namespace DimDream.Content.NPCs
             NPC.SpawnWithHigherTime(30);
             NPC.boss = true;
             NPC.npcSlots = 10f;
-            NPC.BossBar = ModContent.GetInstance<OrinBossBar>();
+            NPC.BossBar = ModContent.GetInstance<OrinHumanoidBossBar>();
             NPC.aiStyle = -1;
 
             if (!Main.dedServ)
@@ -138,6 +154,7 @@ namespace DimDream.Content.NPCs
                 Music = MusicLoader.GetMusicSlot(Mod, "Assets/Music/StrawberryCrisis");
             }
         }
+
 
         public override void ModifyNPCLoot(NPCLoot npcLoot)
         {
@@ -186,12 +203,24 @@ namespace DimDream.Content.NPCs
 
         public override bool CheckDead()
         {
-            if (StageHelper < 10)
+            if (StageHelper < 9)
             {
-                StageHelper = 10;
+                StageHelper = 9;
+                NPC.lifeMax = GetRawHealth(36000, 50000, 64000);
+            } else if (StageHelper < 19)
+            {
+                StageHelper = 19;
+                NPC.lifeMax = GetRawHealth(48000, 65000, 80000);
+            } else if (StageHelper < 29)
+            {
+                StageHelper = 29;
+                NPC.lifeMax = GetRawHealth(35000, 48000, 60000);
+            }
+
+            if (StageHelper < 30)
+            {
                 NPC.life = 1;
                 NPC.dontTakeDamage = true;
-                NPC.lifeMax = 60000;
                 return false;
             }
 
@@ -200,14 +229,30 @@ namespace DimDream.Content.NPCs
 
         public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
-            if (Stage == 4)
+            if (NPC.dontTakeDamage) // Don't draw spell name on revival
+                return true;
+
+            if (StageHelper == 1)
             {
-                int timeFactor = StageLoopCount > 0 ? 999 : Counter + 100;
-                DrawSpellName(spriteBatch, "Cat Sign \"Cat's Walk\"", timeFactor);
+                int timeFactor = !ShouldMoveSpellName ? 999 : Counter + 50;
+                DrawNPC(spriteBatch, timeFactor);
+                DrawSpellName(spriteBatch, "Cursed Sprite \"Zombie Fairy\"", timeFactor);
+            } else if (StageHelper == 11)
+            {
+                int timeFactor = !ShouldMoveSpellName ? 999 : Counter;
+                DrawNPC(spriteBatch, timeFactor);
+                DrawSpellName(spriteBatch, "Malicious Spirit \"Spleen Eater\"", timeFactor);
+            } else if (StageHelper == 21)
+            {
+                int timeFactor = !ShouldMoveSpellName ? 999 : Counter;
+                DrawNPC(spriteBatch, timeFactor);
+                DrawSpellName(spriteBatch, "Atonement \"Former Hell's Needle Mountain\" ", timeFactor);
+            } else if (StageHelper == 30)
+            {
+                int timeFactor = !ShouldMoveSpellName ? 999 : Counter + 250;
+                DrawNPC(spriteBatch, timeFactor);
+                DrawSpellName(spriteBatch, "\"Rekindling of Dead Ashes\"", timeFactor);
             }
-
-            //DrawNPC(spriteBatch, new(Main.miniMapX - Main.miniMapWidth / 2 - 400, Main.miniMapY));
-
             return true;
         }
 
@@ -221,25 +266,29 @@ namespace DimDream.Content.NPCs
             spriteBatch.DrawString(font, spellName, position, Color.White);
         }
 
-        public void DrawNPC(SpriteBatch spriteBatch, Vector2 position)
+        public void DrawNPC(SpriteBatch spriteBatch, int timeFactor)
         {
             Texture2D npcTexture = TextureAssets.Npc[NPC.type].Value;
             int frameHeight = npcTexture.Height / Main.npcFrameCount[NPC.type];
+            float scale = 4;
             Rectangle sourceRectangle = new(0, 0, npcTexture.Width, frameHeight);
+
+            float offset = Math.Min(timeFactor, 30) * .015f + Math.Clamp(timeFactor - 30, 0, 130) * .001f + Math.Max(timeFactor - 150, 0) * .015f;
+
+            Vector2 position = new(Main.screenWidth + npcTexture.Width / 2 - Main.screenWidth * offset, 
+                                   Main.screenHeight * .3f + frameHeight / 2 + Main.screenHeight * .4f * offset);
             Vector2 origin = sourceRectangle.Size() / 2f;
 
             spriteBatch.Draw(
                 npcTexture,
                 position,
                 sourceRectangle,
-                Color.White,
+                Color.White * .5f,
                 0,
                 origin,
-                NPC.scale,
+                scale,
                 SpriteEffects.None,
                 0f);
-
-
         }
 
         public override void AI()
@@ -299,9 +348,11 @@ namespace DimDream.Content.NPCs
                     case 3:
                         Stage3(player); break;
                     case 4:
-                        Stage4(player); break;
+                        Stage4(); break;
                     case 5:
                         Stage5(player); break;
+                    case 6:
+                        Stage6(); break;
                 }
 
 
@@ -380,7 +431,18 @@ namespace DimDream.Content.NPCs
             }
         }
 
-        public void PrePatternDust(int distance)
+        public int GetRawHealth(int classic, int expert, int master)
+        {
+            if (Main.masterMode)
+                return master;
+
+            if (Main.expertMode)
+                return expert;
+
+            return classic;
+        }
+
+        public void PrePatternDust(int distance, float offset = 0)
         {
             int dustCount = 2;
             for (int i = 0; i < dustCount; i++)
@@ -388,7 +450,7 @@ namespace DimDream.Content.NPCs
                 float angle = Main.rand.NextFloat(MathHelper.TwoPi);
                 Vector2 position = new(NPC.Center.X + MathF.Sin(angle) * distance, NPC.Center.Y - MathF.Cos(angle) * distance);
                 float speed = 20f;
-                Vector2 velocity = new(MathF.Sin(angle), -MathF.Cos(angle));
+                Vector2 velocity = new(MathF.Sin(angle + offset), -MathF.Cos(angle + offset));
                 int type = 285;
 
                 Dust d = Dust.NewDustPerfect(position, type, -velocity * speed, 100, default, 4f);
@@ -432,16 +494,31 @@ namespace DimDream.Content.NPCs
             }
         }
 
-        public void SpawnFairyZombie(Vector2 position, Vector2 velocity)
+        public void SpawnFairy(Vector2 position, Vector2 velocity)
         {
-            int type = ModContent.NPCType<OrinFairyZombie>();
+            int type = ModContent.NPCType<OrinFairy>();
             var entitySource = NPC.GetSource_FromAI();
 
             NPC npc = NPC.NewNPCDirect(entitySource, (int)position.X, (int)position.Y, type, NPC.whoAmI, 1);
             npc.velocity = new(velocity.X, velocity.Y + 1f);
+            npc.damage = NPC.damage;
 
-            OrinFairyZombie spirit = (OrinFairyZombie)npc.ModNPC;
-            spirit.ParentIndex = NPC.whoAmI;
+            OrinFairy fairy = (OrinFairy)npc.ModNPC;
+            fairy.ParentIndex = NPC.whoAmI;
+        }
+
+        public void SpawnFairyZombieBalls(Vector2 position, int counter)
+        {
+            int type = ModContent.NPCType<OrinFairyZombieBalls>();
+            var entitySource = NPC.GetSource_FromAI();
+
+            NPC npc = NPC.NewNPCDirect(entitySource, (int)position.X, (int)position.Y, type, NPC.whoAmI, 1);
+            npc.localAI[3] = counter;
+            npc.dontTakeDamage = true;
+            npc.damage = NPC.damage;
+
+            OrinFairyZombieBalls fairy = (OrinFairyZombieBalls)npc.ModNPC;
+            fairy.ParentIndex = NPC.whoAmI;
         }
 
         public void SpawnExplodingSpirits(Vector2 center, int distance, int spiritCount, int timeLeft)
@@ -457,6 +534,7 @@ namespace DimDream.Content.NPCs
 
                 NPC spirit = NPC.NewNPCDirect(entitySource, position, type, NPC.whoAmI, timeLeft);
                 spirit.velocity = velocity * speed;
+                spirit.damage = NPC.damage;
 
                 OrinEvilSpiritExplode s = (OrinEvilSpiritExplode)spirit.ModNPC;
                 s.ParentIndex = NPC.whoAmI;
@@ -476,6 +554,7 @@ namespace DimDream.Content.NPCs
 
                 NPC spirit = NPC.NewNPCDirect(entitySource, position, type, NPC.whoAmI);
                 spirit.velocity = velocity * speed;
+                spirit.damage = RawDamage;
 
                 OrinEvilSpiritSpiral s = (OrinEvilSpiritSpiral)spirit.ModNPC;
                 s.ParentIndex = NPC.whoAmI;
@@ -494,6 +573,7 @@ namespace DimDream.Content.NPCs
 
                 NPC spirit = NPC.NewNPCDirect(entitySource, position, type, NPC.whoAmI, timeLeft);
                 spirit.velocity = velocity * speed;
+                spirit.damage = NPC.damage;
 
                 OrinEvilSpiritCircleThrust s = (OrinEvilSpiritCircleThrust)spirit.ModNPC;
                 s.ParentIndex = NPC.whoAmI;
@@ -512,6 +592,7 @@ namespace DimDream.Content.NPCs
 
                 NPC spirit = NPC.NewNPCDirect(entitySource, position, type, NPC.whoAmI, timeLeft, orbitVelocity.X, orbitVelocity.Y);
                 spirit.velocity = velocity * speed;
+                spirit.damage = RawDamage;
 
                 OrinEvilSpiritRotating s = (OrinEvilSpiritRotating)spirit.ModNPC;
                 s.ParentIndex = NPC.whoAmI;
@@ -585,6 +666,11 @@ namespace DimDream.Content.NPCs
             Destination = ArenaCenter + MoveOffset;
             NPC.netUpdate = true; // Update Destination to every client so they know where the boss should move towards
         }
+        public void GoToCenter()
+        {
+            Destination = ArenaCenter;
+            NPC.netUpdate = true;
+        }
         public void ShortJump()
         {
             Vector2 direction = new(400 + Main.rand.Next(150), Main.rand.Next(-50, 50));
@@ -645,7 +731,7 @@ namespace DimDream.Content.NPCs
                     int fairyCount = 0;
 
                     foreach (var otherNPC in Main.ActiveNPCs)
-                        if (otherNPC.type == ModContent.NPCType<OrinFairyZombie>())
+                        if (otherNPC.type == ModContent.NPCType<OrinFairy>())
                             fairyCount++;
 
 
@@ -653,7 +739,7 @@ namespace DimDream.Content.NPCs
                     {
                         Vector2 velocity = new Vector2(1, 0).RotatedBy(fairyCount * Pi/16) * 5f;
 
-                        SpawnFairyZombie(NPC.Center, velocity);
+                        SpawnFairy(NPC.Center, velocity);
                     }
                 }
 
@@ -671,7 +757,7 @@ namespace DimDream.Content.NPCs
                     float distance = start * 80;
                     int frameToSpeedUp = 100 - start * 2;
 
-                    Circle(CastingPosition, distance, angle, .01f, 24, ModContent.ProjectileType<SpeedUpDiamondBlue>(), 20f, frameToSpeedUp);
+                    Circle(CastingPosition, distance, angle, .01f, 24, ModContent.ProjectileType<SpeedUpDiamondBlue>(), 12f, frameToSpeedUp);
                 }
 
                 if (Counter % 500 > 200 && Counter % 500 <= 214)
@@ -681,7 +767,7 @@ namespace DimDream.Content.NPCs
                     float distance = start * 80;
                     int frameToSpeedUp = 100 - start * 2;
 
-                    Circle(CastingPosition, distance, angle, .01f, 24, ModContent.ProjectileType<SpeedUpDiamondRed>(), 20f, frameToSpeedUp);
+                    Circle(CastingPosition, distance, angle, .01f, 24, ModContent.ProjectileType<SpeedUpDiamondRed>(), 12f, frameToSpeedUp);
                 }
             }
 
@@ -699,6 +785,10 @@ namespace DimDream.Content.NPCs
                 if (Counter == 1)
                     GoToDefaultPosition();
 
+
+                if (Counter < 0)
+                    PrePatternDust(500 + Counter * 5);
+
                 if (Casting && Counter % 5 == 0)
                 {
                     float angle = Pi / 125 * (Counter + Main.rand.Next(10));
@@ -713,17 +803,21 @@ namespace DimDream.Content.NPCs
             if (StageHelper < 1)
             {
                 StageHelper = 1;
-                Counter = 0;
+                Counter = -50;
                 Casting = false;
+                ShouldMoveSpellName = true;
             }
 
             if (Counter >= 500)
+            {
                 Counter = 0;
+                ShouldMoveSpellName = false;
+            }
         }
 
         public void Stage2()
         {
-            if (Main.netMode != NetmodeID.MultiplayerClient && StageHelper >= 2) // Only server should spawn bullets and change destination
+            if (Main.netMode != NetmodeID.MultiplayerClient && StageHelper >= 10) // Only server should spawn bullets and change destination
             {
                 if (Counter % 300 == 1 || Counter % 300 == 100)
                 {
@@ -739,9 +833,9 @@ namespace DimDream.Content.NPCs
                     SpawnExplodingSpirits(CastingPosition, distance, spiritCount, 170);
                 }
 
-                if (Counter % 300 >= 180 && Counter % 3 == 0 && Counter % 300 < 230)
+                if (Counter % 300 >= 230 && Counter % 3 == 0 && Counter % 300 < 280)
                 {
-                    int start = Counter % 300 - 180;
+                    int start = Counter % 300 - 230;
                     float angle = Counter >= 300 ? -start * Pi / 400 : start * Pi / 400;
                     float distance = 40 + start * 8;
                     int frameToSpeedUp = 150 - start * 2;
@@ -753,9 +847,9 @@ namespace DimDream.Content.NPCs
             if (Counter == 60)
                 Casting = true;
 
-            if (StageHelper < 2)
+            if (StageHelper < 10)
             {
-                StageHelper = 2;
+                StageHelper = 10;
                 Counter = 0;
                 Casting = false;
             }
@@ -766,7 +860,7 @@ namespace DimDream.Content.NPCs
 
         public void Stage3(Player player)
         {
-            if (Main.netMode != NetmodeID.MultiplayerClient && StageHelper >= 3) // Only server should spawn bullets and change destination
+            if (Main.netMode != NetmodeID.MultiplayerClient && StageHelper >= 11) // Only server should spawn bullets and change destination
             {
                 if (Counter == 120)
                 {
@@ -786,20 +880,24 @@ namespace DimDream.Content.NPCs
             else
                 Casting = false;
 
-            if (StageHelper < 3)
+            if (StageHelper < 11)
             {
-                StageHelper = 3;
+                StageHelper = 11;
                 Counter = 0;
                 Casting = false;
+                ShouldMoveSpellName = true;
             }
 
             if (Counter >= 450)
+            {
                 Counter = 0;
+                ShouldMoveSpellName = false;
+            }
         }
 
-        public void Stage4(Player player)
+        public void Stage4()
         {
-            if (Main.netMode != NetmodeID.MultiplayerClient && StageHelper >= 4) // Only server should spawn bullets and change destination
+            if (Main.netMode != NetmodeID.MultiplayerClient && StageHelper >= 20) // Only server should spawn bullets and change destination
             {
                 if (Counter == 120)
                 {
@@ -815,9 +913,9 @@ namespace DimDream.Content.NPCs
             if (Counter >= 100)
                 Casting = true;
 
-            if (StageHelper < 4)
+            if (StageHelper < 20)
             {
-                StageHelper = 4;
+                StageHelper = 20;
                 Counter = 0;
                 if (Main.netMode != NetmodeID.MultiplayerClient)
                     GoToDefaultPosition();
@@ -830,7 +928,7 @@ namespace DimDream.Content.NPCs
 
         public void Stage5(Player player)
         {
-            if (Main.netMode != NetmodeID.MultiplayerClient && StageHelper >= 5) // Only server should spawn bullets and change destination
+            if (Main.netMode != NetmodeID.MultiplayerClient && StageHelper >= 21) // Only server should spawn bullets and change destination
             {
                 if (Counter == 1)
                     GoToDefaultPosition();
@@ -869,14 +967,80 @@ namespace DimDream.Content.NPCs
             if (Counter == 1)
                 Casting = true;
 
-            if (StageHelper < 5)
+            if (StageHelper < 21)
             {
-                StageHelper = 5;
+                StageHelper = 21;
                 Counter = 0;
+                ShouldMoveSpellName = true;
             }
 
             if (Counter >= 400)
+            {
                 Counter = 0;
+                ShouldMoveSpellName = false;
+            }
+        }
+
+        public void Stage6()
+        {
+            if (Main.netMode != NetmodeID.MultiplayerClient && StageHelper >= 30) // Only server should spawn bullets and change destination
+            {
+                if (Counter == 1)
+                    GoToCenter();
+
+                if (Counter < 0 && Counter >= -160 && Counter % 20 == 0)
+                {
+                    int fairyCount = 0;
+
+                    foreach (var otherNPC in Main.ActiveNPCs)
+                        if (otherNPC.type == ModContent.NPCType<OrinFairyZombieBalls>())
+                            fairyCount++;
+
+                    
+                    for (int i = 0; i < 2; i++)
+                    {
+                        if (fairyCount <= 16)
+                        {
+                            int side = i > 0 ? 1 : -1;
+                            int height = (80 + Counter) * 8;
+                            Vector2 offset = new(side * 600, height);
+                            Vector2 position = NPC.Center + offset;
+                            SpawnFairyZombieBalls(position, Counter);
+                        }
+                    }
+                }
+
+                if (Casting && Counter % 10 == 0)
+                {
+                    float angle = Pi / 250 * (Counter + Main.rand.Next(10));
+                    float speed = Main.rand.NextFloat(2f, 4f);
+                    ShootMany(ModContent.ProjectileType<BasicSpiralBullet>(), CastingPosition, angle, speed, 1);
+                    ShootMany(ModContent.ProjectileType<BasicSpiralBullet>(), CastingPosition, angle + Pi, speed, 1);
+                }
+
+                if (!Casting && Counter > 0)
+                {
+                    PrePatternDust(Counter * 5, Pi);
+                }
+            }
+
+            if (Counter >= 100)
+                Casting = true;
+
+            if (StageHelper < 30)
+            {
+                StageHelper = 30;
+                Counter = -250;
+                Casting = false;
+                ShouldMoveSpellName = true;
+                GoToCenter();
+            }
+
+            if (Counter >= 500)
+            {
+                Counter = 0;
+                ShouldMoveSpellName = false;
+            }
         }
     }
 }

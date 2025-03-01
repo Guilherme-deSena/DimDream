@@ -7,6 +7,12 @@
 	<PropertyGroup>
 		
 	</PropertyGroup>
+	<ItemGroup>
+	  <None Remove="assets\effects\SpellOrin.fx" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Assets\Effects\" />
+	</ItemGroup>
 
 	<!-- References -->
 
