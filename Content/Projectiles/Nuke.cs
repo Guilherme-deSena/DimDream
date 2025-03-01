@@ -40,6 +40,12 @@ namespace DimDream.Content.Projectiles
             set => Projectile.localAI[1] = value ? 1f : 0f;
         }
 
+        private int Counter
+        {
+            get => (int)Projectile.localAI[2];
+            set => Projectile.localAI[2] = value;
+        }
+
         public override void SetDefaults()
         {
             Projectile.width = 150;
@@ -68,7 +74,13 @@ namespace DimDream.Content.Projectiles
         public override bool PreDraw(ref Color lightColor)
         {
             if (Projectile.timeLeft > 150)
+            {
+                Projectile.hostile = false;
                 return false;
+            } else
+            {
+                Projectile.hostile = true;
+            }
 
             Texture2D texture = TextureAssets.Projectile[Projectile.type].Value;
             Vector2 drawOrigin = texture.Size() / 2f;
@@ -83,6 +95,12 @@ namespace DimDream.Content.Projectiles
 
         public override void AI()
         {
+            if (Projectile.timeLeft > 150)
+                return;
+
+            FadeInAndOut();
+            Counter++;
+
             if (!Initialized)
             {
                 Initialized = true;
@@ -92,26 +110,21 @@ namespace DimDream.Content.Projectiles
 
             Despawn();
 
-            if (Projectile.timeLeft > 150)
-            {
-                Projectile.hostile = false;
-                return;
-            }
-            else
-                Projectile.hostile = true;
 
             Visuals();
         }
 
-        public void Despawn()
+        public bool Despawn()
         {
             NPC parent = Main.npc[ParentIndex];
-            if (Main.netMode != NetmodeID.MultiplayerClient &&
+            if (Main.netMode != NetmodeID.MultiplayerClient && Counter > 20 &&
                 (!HasParent || (parent.dontTakeDamage && parent.localAI[2] >= 1) || (int)parent.localAI[2] != ParentStageHelper || !Main.npc[ParentIndex].active))
             {
-                Projectile.timeLeft = 0;
+                Projectile.timeLeft = Math.Min(Projectile.timeLeft, 20);
                 NetMessage.SendData(MessageID.SyncProjectile, number: Projectile.whoAmI);
+                return true;
             }
+            return false;
         }
         private void FadeInAndOut()
         {

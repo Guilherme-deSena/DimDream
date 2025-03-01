@@ -21,15 +21,12 @@ Mods: {
 			FairyZombie.DisplayName: Fairy Zombie
 			OrinFairyZombie.DisplayName: Orin Fairy Zombie
 			OrinFairyZombieGhostly.DisplayName: Orin Fairy Zombie Ghostly
-			OrinFairy.DisplayName: Orin Fairy
 			OrinEvilSpiritExplode.DisplayName: Orin Evil Spirit Explode
 			OrinEvilSpiritSpiral.DisplayName: Orin Evil Spirit Spiral
 			OrinEvilSpiritBurst.DisplayName: Orin Evil Spirit Burst
 			OrinEvilSpiritCircleStill.DisplayName: Orin Evil Spirit Circle Still
 			OrinEvilSpiritCircleThrust.DisplayName: Orin Evil Spirit Circle Thrust
 			OrinEvilSpiritRotating.DisplayName: Orin Evil Spirit Rotating
-			OrinFairyZombieBalls.DisplayName: Orin Fairy Zombie Balls
-			OrinFairyZombieSpores.DisplayName: Orin Fairy Zombie Spores
 		}
 
 		Items: {
@@ -99,26 +96,6 @@ Mods: {
 				DisplayName: Corpse Coffin
 				Tooltip: ""
 			}
-
-			OrinsCart: {
-				DisplayName: Orins Cart
-				Tooltip: ""
-			}
-
-			OrinsCartDisabled: {
-				DisplayName: Orins Cart Disabled
-				Tooltip: ""
-			}
-
-			OrinsCartEnabled: {
-				DisplayName: Orins Cart Enabled
-				Tooltip: ""
-			}
-
-			VengefulSpiritStaff: {
-				DisplayName: Vengeful Spirit Staff
-				Tooltip: ""
-			}
 		}
 
 		Projectiles: {
@@ -166,20 +143,12 @@ Mods: {
 			SlowDownBullet.DisplayName: Slow Down Bullet
 			SlowDownLargeBallBlue.DisplayName: Slow Down Large Ball Blue
 			SpeedUpRiceBlue.DisplayName: Speed Up Rice Blue
-			BasicDonutRed.DisplayName: Basic Donut Red
-			BasicLargeBallBlueFriendly.DisplayName: Basic Large Ball Blue Friendly
-			VengefulSpiritSummon.DisplayName: Vengeful Spirit Summon
 		}
 
 		Buffs: {
 			MimiChanBuff: {
 				DisplayName: Mimi-Chan
 				Description: An ICBM will fight for you
-			}
-
-			VengefulSpiritBuff: {
-				DisplayName: Vengeful Spirit Buff
-				Description: Mods.DimDream.Buffs.VengefulSpiritBuff.Description
 			}
 		}
 	}

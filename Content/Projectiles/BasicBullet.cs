@@ -96,7 +96,7 @@ namespace DimDream.Content.Projectiles
             }
         }
 
-        public virtual void Despawn()
+        public bool Despawn()
         {
             NPC parent = Main.npc[ParentIndex];
             Vector2 arenaCenter = new(parent.localAI[0], parent.localAI[1]);
@@ -106,7 +106,9 @@ namespace DimDream.Content.Projectiles
             {
                 Projectile.timeLeft = 20;
                 NetMessage.SendData(MessageID.SyncProjectile, number: Projectile.whoAmI);
+                return true;
             }
+            return false;
         }
     }
 
@@ -130,24 +132,7 @@ namespace DimDream.Content.Projectiles
             Projectile.aiStyle = -1;
             CooldownSlot = ImmunityCooldownID.Bosses; // use the boss immunity cooldown counter, to prevent ignoring boss attacks by taking damage from other sources
         }
-
-        public override void Despawn() { }
     }
-
-    public class BasicLargeBallBlueFriendly : BasicLargeBallBlue
-    {
-        public override void SetDefaults()
-        {
-            Projectile.width = 10;
-            Projectile.height = 10;
-            DrawOffsetX = -5;
-            DrawOriginOffsetY = -5;
-            Projectile.alpha = 255;
-            Projectile.timeLeft = 300;
-            Projectile.friendly = true;
-        }
-    }
-
 
     public class BasicWhiteSpore : BasicBullet
     {
@@ -182,27 +167,6 @@ namespace DimDream.Content.Projectiles
             DrawOriginOffsetY = -3;
             Projectile.alpha = 255;
             Projectile.timeLeft = 350;
-            Projectile.friendly = false;
-            Projectile.hostile = true;
-            Projectile.tileCollide = false;
-            Projectile.ignoreWater = true;
-            Projectile.netImportant = true;
-            Projectile.aiStyle = -1;
-            CooldownSlot = ImmunityCooldownID.Bosses; // use the boss immunity cooldown counter, to prevent ignoring boss attacks by taking damage from other sources
-        }
-    }
-
-    public class BasicDonutRed : BasicBullet
-    {
-        public override string Texture => "DimDream/Content/Projectiles/DonutRed";
-        public override void SetDefaults()
-        {
-            Projectile.width = 40;
-            Projectile.height = 40;
-            DrawOffsetX = -20;
-            DrawOriginOffsetY = -20;
-            Projectile.alpha = 255;
-            Projectile.timeLeft = 600;
             Projectile.friendly = false;
             Projectile.hostile = true;
             Projectile.tileCollide = false;

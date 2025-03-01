@@ -31,20 +31,6 @@ namespace DimDream.Content.NPCs
             set => NPC.ai[3] = value + 1;
         }
 
-        public virtual int ProjDamage
-        {
-            get
-            {
-                if (Main.masterMode)
-                    return NPC.damage / 4;
-
-                if (Main.expertMode)
-                    return NPC.damage / 2;
-
-                return NPC.damage;
-            }
-        }
-
         public bool HasParent => ParentIndex > -1;
         public int ParentStageHelper { get; set; }
 
@@ -64,14 +50,12 @@ namespace DimDream.Content.NPCs
             NPCID.Sets.SpecificDebuffImmunity[Type][BuffID.Confused] = true;
 
             NPCID.Sets.BossBestiaryPriority.Add(Type);
-
-            // If you don't want this NPC to show on the bestiary (if there is no reason to show a boss minion separately)
+            // Optional: If you don't want this NPC to show on the bestiary (if there is no reason to show a boss minion separately)
             // Make sure to remove SetBestiary code as well
-            NPCID.Sets.NPCBestiaryDrawModifiers bestiaryData = new NPCID.Sets.NPCBestiaryDrawModifiers() 
-            {
-                Hide = true // Hides this NPC from the bestiary
-            };
-            NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, bestiaryData);
+            // NPCID.Sets.NPCBestiaryDrawModifiers bestiaryData = new NPCID.Sets.NPCBestiaryDrawModifiers() {
+            //	Hide = true // Hides this NPC from the bestiary
+            // };
+            // NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, bestiaryData);
         }
 
         public override void SetDefaults()
@@ -225,7 +209,7 @@ namespace DimDream.Content.NPCs
 
                 var entitySource = NPC.GetSource_FromAI();
 
-                Projectile.NewProjectile(entitySource, positionOffset, velocity * speed, type, ProjDamage, 0f, Main.myPlayer, 6f, frameToSpeedUp, ParentIndex);
+                Projectile.NewProjectile(entitySource, positionOffset, velocity * speed, type, NPC.damage, 0f, Main.myPlayer, 6f, frameToSpeedUp, ParentIndex);
             }
         }
     }
@@ -353,7 +337,7 @@ namespace DimDream.Content.NPCs
                 float speed = 7f;
                 var entitySource = NPC.GetSource_FromAI();
                 int type = ModContent.ProjectileType<BasicLargeBallBlue>();
-                Projectile.NewProjectile(entitySource, position, direction * speed, type, ProjDamage, 0f, Main.myPlayer, ai2: ParentIndex);
+                Projectile.NewProjectile(entitySource, position, direction * speed, type, NPC.damage, 0f, Main.myPlayer, ai2: ParentIndex);
             }
         }
     }
@@ -420,7 +404,7 @@ namespace DimDream.Content.NPCs
                 Vector2 direction = new Vector2(MathF.Cos(angle), MathF.Sin(angle));
                 var entitySource = NPC.GetSource_FromAI();
                 int type = ModContent.ProjectileType<LargeBallBlue>();
-                Projectile.NewProjectile(entitySource, position, direction * speed, type, ProjDamage, 0f, Main.myPlayer, 2, ai2: ParentIndex);
+                Projectile.NewProjectile(entitySource, position, direction * speed, type, NPC.damage, 0f, Main.myPlayer, 2, ai2: ParentIndex);
             }
         }
 
@@ -444,21 +428,7 @@ namespace DimDream.Content.NPCs
                 NPC.localAI[2] = value.Y;
             }
         }
-
-        public override int ProjDamage
-        {
-            get
-            {
-                if (Main.masterMode)
-                    return NPC.damage / 12;
-
-                if (Main.expertMode)
-                    return NPC.damage / 4;
-
-                return NPC.damage;
-            }
-        }
-
+ 
         public override void AI()
         {
             if (!Initialized)
@@ -519,7 +489,7 @@ namespace DimDream.Content.NPCs
 
             var entitySource = NPC.GetSource_FromAI();
             int type = ModContent.ProjectileType<SpeedUpRiceBlue>();
-            Projectile p = Projectile.NewProjectileDirect(entitySource, position, direction * speed, type, ProjDamage, 0f, Main.myPlayer, maxSpeed, frameToSpeedUp, ai2: ParentIndex);
+            Projectile p = Projectile.NewProjectileDirect(entitySource, position, direction * speed, type, NPC.damage, 0f, Main.myPlayer, maxSpeed, frameToSpeedUp, ai2: ParentIndex);
             p.timeLeft = 700;
         }
     }

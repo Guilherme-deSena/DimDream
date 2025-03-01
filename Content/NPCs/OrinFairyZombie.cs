@@ -6,7 +6,6 @@ using MonoMod.Core.Utils;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Metrics;
-using System.Reflection.Metadata;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.GameContent.Bestiary;
@@ -16,11 +15,16 @@ using Terraria.ModLoader;
 namespace DimDream.Content.NPCs
 {
     // Don't call this class. Use one of its child classes below it instead.
-    internal class OrinFairy : ModNPC
+    internal class OrinFairyZombie : ModNPC
     {
         public bool Initialized { get; set; } = false;
         private bool SlowMoving { get => Math.Abs(NPC.velocity.X) > .2f && Math.Abs(NPC.velocity.X) < .6f; }
+        public int Behavior { get => (int)NPC.ai[0]; }
 
+        // This is a neat trick that uses the fact that NPCs have all NPC.ai[] values set to 0f on spawn (if not otherwise changed).
+        // We set ParentIndex to a number in the body after spawning it. If we set ParentIndex to 3, NPC.ai[0] will be 4. If NPC.ai[0] is 0, ParentIndex will be -1.
+        // Now combine both facts, and the conclusion is that if this NPC spawns by other means (not from the body), ParentIndex will be -1, allowing us to distinguish
+        // between a proper spawn and an invalid/"cheated" spawn
         public int ParentIndex
         {
             get => (int)NPC.ai[3] - 1;
@@ -28,7 +32,6 @@ namespace DimDream.Content.NPCs
         }
 
         public bool HasParent => ParentIndex > -1;
-        public int ParentStageHelper { get; set; }
 
         public float Counter
         {
@@ -36,18 +39,9 @@ namespace DimDream.Content.NPCs
             set => NPC.localAI[3] = value;
         }
 
-        public int ProjDamage
+        public static int ParentType()
         {
-            get
-            {
-                if (Main.masterMode)
-                    return NPC.damage / 4;
-
-                if (Main.expertMode)
-                    return NPC.damage / 2;
-
-                return NPC.damage;
-            }
+            return ModContent.NPCType<OrinBossHumanoid>();
         }
 
         public override void SetStaticDefaults()
@@ -60,12 +54,12 @@ namespace DimDream.Content.NPCs
             NPCID.Sets.SpecificDebuffImmunity[Type][BuffID.Confused] = true;
 
             NPCID.Sets.BossBestiaryPriority.Add(Type);
-
-            NPCID.Sets.NPCBestiaryDrawModifiers bestiaryData = new NPCID.Sets.NPCBestiaryDrawModifiers()
-            {
-                Hide = true // Hides this NPC from the bestiary
-            };
-            NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, bestiaryData);
+            // Optional: If you don't want this NPC to show on the bestiary (if there is no reason to show a boss minion separately)
+            // Make sure to remove SetBestiary code as well
+            // NPCID.Sets.NPCBestiaryDrawModifiers bestiaryData = new NPCID.Sets.NPCBestiaryDrawModifiers() {
+            //	Hide = true // Hides this NPC from the bestiary
+            // };
+            // NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, bestiaryData);
         }
 
         public override void SetDefaults()
@@ -85,6 +79,18 @@ namespace DimDream.Content.NPCs
 
             float maxSpeed = .2f;
             NPC.velocity = new(Main.rand.NextFloat(-maxSpeed, maxSpeed), Main.rand.NextFloat(-maxSpeed, maxSpeed));
+        }
+
+        public override void SetBestiary(BestiaryDatabase database, BestiaryEntry bestiaryEntry)
+        {
+            // Makes it so whenever you beat the boss associated with it, it will also get unlocked immediately
+            int associatedNPCType = ParentType();
+            bestiaryEntry.UIInfoProvider = new CommonEnemyUICollectionInfoProvider(ContentSamples.NpcBestiaryCreditIdsByNpcNetIds[associatedNPCType], quickUnlock: true);
+
+            bestiaryEntry.Info.AddRange([
+                new MoonLordPortraitBackgroundProviderBestiaryInfoElement(), // Plain black background
+				new FlavorTextBestiaryInfoElement("A vengeful spirit from the Underworld. Orin seems particularly good at making them do her bidding.")
+            ]);
         }
 
         public override bool CanHitPlayer(Player target, ref int cooldownSlot)
@@ -158,12 +164,6 @@ namespace DimDream.Content.NPCs
 
         public override void AI()
         {
-            if (!Initialized)
-            {
-                Initialized = true;
-                ParentStageHelper = (int)Main.npc[ParentIndex].localAI[2];
-            }
-
             Despawn();
 
             Counter++;
@@ -197,11 +197,9 @@ namespace DimDream.Content.NPCs
                 OrinBossHumanoid boss = (OrinBossHumanoid)parent.ModNPC;
                 if (boss.StageHelper == 1)
                 {
-                    int type = ModContent.NPCType<OrinFairyZombieSpores>();
+                    int type = ModContent.NPCType<OrinFairyZombieGhostly>();
                     var entitySource = parent.GetSource_FromAI();
-                    NPC npc = NPC.NewNPCDirect(entitySource, (int)NPC.Center.X, (int)NPC.Center.Y, type, NPC.whoAmI);
-                    npc.damage = NPC.damage;
-                    OrinFairyZombieSpores fairy = (OrinFairyZombieSpores)npc.ModNPC;
+                    OrinFairyZombieGhostly fairy = (OrinFairyZombieGhostly)NPC.NewNPCDirect(entitySource, (int)NPC.Center.X, (int)NPC.Center.Y, type, NPC.whoAmI).ModNPC;
                     fairy.ParentIndex = ParentIndex;
                     fairy.Counter = -1;
 
@@ -211,7 +209,7 @@ namespace DimDream.Content.NPCs
                     return true;
                 }
 
-                if (!HasParent || !Main.npc[ParentIndex].active)
+                if (!HasParent || (parent.dontTakeDamage && boss.StageHelper >= 2) || !Main.npc[ParentIndex].active || Main.npc[ParentIndex].type != ParentType())
                 {
                     NPC.active = false;
                     NPC.life = 0;
@@ -237,9 +235,9 @@ namespace DimDream.Content.NPCs
         }
     }
 
-    internal class OrinFairyZombieSpores : OrinFairy
+    internal class OrinFairyZombieGhostly : OrinFairyZombie
     {
-        public override string Texture => "DimDream/Content/NPCs/OrinFairyZombie";
+        public override string Texture => "DimDream/Content/NPCs/OrinFairyZombieGhostly";
         public override void AI()
         {
             // This should almost always be the first code in AI() as it is responsible for finding the proper player target
@@ -248,12 +246,6 @@ namespace DimDream.Content.NPCs
                 NPC.TargetClosest();
 
             player = Main.player[NPC.target];
-
-            if (!Initialized)
-            {
-                Initialized = true;
-                ParentStageHelper = (int)Main.npc[ParentIndex].localAI[2];
-            }
 
             if (Despawn())
                 return;
@@ -300,7 +292,7 @@ namespace DimDream.Content.NPCs
         {
             NPC parent = Main.npc[ParentIndex];
             if (Main.netMode != NetmodeID.MultiplayerClient &&
-                (!HasParent || parent.localAI[2] > ParentStageHelper || !Main.npc[ParentIndex].active))
+                (!HasParent || (parent.dontTakeDamage && parent.localAI[2] >= 1) || !Main.npc[ParentIndex].active || Main.npc[ParentIndex].type != ParentType()))
             {
                 NPC.life = 0;
                 NetMessage.SendData(MessageID.SyncNPC, number: NPC.whoAmI);
@@ -335,101 +327,7 @@ namespace DimDream.Content.NPCs
                 var entitySource = NPC.GetSource_FromAI();
                 int type = ModContent.ProjectileType<BasicWhiteSpore>();
 
-                Projectile.NewProjectile(entitySource, position, velocity * speed, type, ProjDamage, 0f, Main.myPlayer, ai2: ParentIndex);
-            }
-        }
-    }
-    
-    internal class OrinFairyZombieBalls : OrinFairyZombieSpores
-    {
-        public bool IsGonnaThrowDonuts
-        {
-            get => NPC.localAI[0] > 0;
-            set => NPC.localAI[0] = value ? 1 : 0;
-        }
-        public override void AI()
-        {
-            // This should almost always be the first code in AI() as it is responsible for finding the proper player target
-            Player player = Main.player[NPC.target];
-            if (NPC.target < 0 || NPC.target == 255 || player.dead || !player.active || Vector2.Distance(NPC.Center, player.Center) > 3000f)
-                NPC.TargetClosest();
-
-            player = Main.player[NPC.target];
-
-            if (!Initialized)
-            {
-                Initialized = true;
-                ParentStageHelper = (int)Main.npc[ParentIndex].localAI[2];
-            }
-
-            if (Despawn())
-                return;
-
-            Counter++;
-            if (Counter == 1 && NPC.life == 1)
-                NPC.velocity = new(Main.rand.NextFloat(-3f, 3f), Main.rand.NextFloat(-9f, 9f));
-            else if (Counter >= 60 && Counter % 6 == 0 && NPC.dontTakeDamage)
-                CreateDust();
-            else if (Counter >= 180 && NPC.dontTakeDamage)
-            {
-                Revive();
-                float angle = (player.Center - NPC.Center).Y > 0 ? MathHelper.Pi : 0;
-                ThrowSmallBall(NPC.Center, angle, 4f, 120);
-            } else if (Counter >= 500 && IsGonnaThrowDonuts)
-            {
-                Counter = -100;
-                IsGonnaThrowDonuts = false;
-                float offset = Main.rand.NextFloat(MathHelper.TwoPi);
-                ThrowDonuts(NPC.Center, 8, 4f, offset);
-            }
-
-            if (Counter > 500 && (player.Center - NPC.Center).Length() < 450)
-            {
-                Counter = 460;
-                IsGonnaThrowDonuts = true;
-            }
-
-            if (!NPC.dontTakeDamage && !IsGonnaThrowDonuts && Counter > 0)
-            {
-                Vector2 toPlayer = player.Center - NPC.Center;
-                float angle = toPlayer.SafeNormalize(Vector2.UnitY).ToRotation();
-                float speed = 2.5f;
-                NPC.velocity = new(MathF.Cos(angle) * speed, MathF.Sin(angle) * speed);
-            }
-            else if (NPC.velocity != Vector2.Zero)
-            {
-                NPC.velocity *= .95f;
-                if (Math.Abs(NPC.velocity.X) < .1f && Math.Abs(NPC.velocity.Y) < .1f)
-                    NPC.velocity = Vector2.Zero;
-            }
-
-
-            NPC.friendly = NPC.dontTakeDamage;
-            NPC.alpha = NPC.dontTakeDamage ? 150 : 0;
-            NPC.spriteDirection = NPC.velocity.X < 0 ? 1 : -1;
-        }
-
-        public void ThrowSmallBall(Vector2 position, float angle, float maxSpeed, int frameToSpeedUp)
-        {
-            Vector2 velocity = new Vector2(0, -1).RotatedBy(angle);
-            float speed = .01f;
-            var entitySource = NPC.GetSource_FromAI();
-            int type = ModContent.ProjectileType<SpeedUpLargeBallBlue>();
-
-            Projectile.NewProjectile(entitySource, position, velocity * speed, type, ProjDamage, 0f, Main.myPlayer, maxSpeed, frameToSpeedUp, ai2: ParentIndex);
-        }
-
-        public void ThrowDonuts(Vector2 position, int count, float speed, float offset)
-        {
-            for (int i = 0; i < count; i++)
-            {
-                float angle = offset + MathHelper.TwoPi / count * i;
-                Vector2 velocity = new Vector2(0, -1).RotatedBy(angle);
-
-                var entitySource = NPC.GetSource_FromAI();
-                int type = ModContent.ProjectileType<BasicDonutRed>();
-
-                Projectile.NewProjectile(entitySource, position, velocity * speed, type, ProjDamage, 0f, Main.myPlayer, ai2: ParentIndex);
+                Projectile.NewProjectile(entitySource, position, velocity * speed, type, NPC.damage, 0f, Main.myPlayer, ai2: ParentIndex);
             }
         }
     }
