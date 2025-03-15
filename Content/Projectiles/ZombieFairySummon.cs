@@ -13,19 +13,20 @@ using System.Diagnostics.Metrics;
 
 namespace DimDream.Content.Projectiles
 {
-    public class VengefulSpiritSummon : ModProjectile
+    public class ZombieFairySummon : ModProjectile
     {
+        private bool SlowMoving { get => Math.Abs(Projectile.velocity.X) > .2f && Math.Abs(Projectile.velocity.X) < .6f; }
         public int Counter
         {
             get => (int)Projectile.localAI[2];
 
             set => Projectile.localAI[2] = value;
         }
-        public override string Texture => "DimDream/Content/NPCs/OrinEvilSpiritBlue";
+        public override string Texture => "DimDream/Content/NPCs/OrinFairyZombie";
 
         public override void SetStaticDefaults()
         {
-            Main.projFrames[Projectile.type] = 6;
+            Main.projFrames[Projectile.type] = 16;
             ProjectileID.Sets.MinionTargettingFeature[Projectile.type] = true;
 
             Main.projPet[Projectile.type] = true;
@@ -36,8 +37,8 @@ namespace DimDream.Content.Projectiles
 
         public sealed override void SetDefaults()
         {
-            Projectile.width = 38;
-            Projectile.height = 36;
+            Projectile.width = 52;
+            Projectile.height = 44;
             Projectile.tileCollide = false;
 
             Projectile.friendly = true;
@@ -46,6 +47,7 @@ namespace DimDream.Content.Projectiles
             Projectile.minionSlots = 1f;
             Projectile.penetrate = -1;
         }
+
 
         public override bool? CanCutTiles()
         {
@@ -75,12 +77,12 @@ namespace DimDream.Content.Projectiles
         {
             if (owner.dead || !owner.active)
             {
-                owner.ClearBuff(ModContent.BuffType<VengefulSpiritBuff>());
+                owner.ClearBuff(ModContent.BuffType<ZombieFairyBuff>());
 
                 return false;
             }
 
-            if (owner.HasBuff(ModContent.BuffType<VengefulSpiritBuff>()))
+            if (owner.HasBuff(ModContent.BuffType<ZombieFairyBuff>()))
             {
                 Projectile.timeLeft = 2;
             }
@@ -189,16 +191,28 @@ namespace DimDream.Content.Projectiles
 
         private void Movement(bool foundTarget, float distanceFromTarget, Vector2 targetCenter, float distanceToIdlePosition, Vector2 vectorToIdlePosition)
         {
+            if (Counter < 0)
+            {
+                Projectile.velocity *= Projectile.velocity.Length() > .2f ? .9f : 0;
+                return;
+            }
+
             float speed = 8f;
             float inertia = 20f;
 
-            if (foundTarget && distanceFromTarget > 500f)
+            if (foundTarget)
             {
-                Vector2 direction = targetCenter - Projectile.Center;
-                direction.Normalize();
-                direction *= speed;
+                if (distanceFromTarget > 200f)
+                {
+                    Vector2 direction = targetCenter - Projectile.Center;
+                    direction.Normalize();
+                    direction *= speed;
 
-                Projectile.velocity = (Projectile.velocity * (inertia - 1) + direction) / inertia;
+                    Projectile.velocity = (Projectile.velocity * (inertia - 1) + direction) / inertia;
+                } else
+                {
+                    Counter = -100;
+                }
             }
             else
             {
@@ -236,21 +250,22 @@ namespace DimDream.Content.Projectiles
 
         private void Attack(bool foundTarget, float distanceFromTarget, Vector2 targetCenter)
         {
-            if (Main.netMode != NetmodeID.MultiplayerClient && foundTarget && distanceFromTarget < 1400f && Counter % 40 == 0)
+            if (Main.netMode != NetmodeID.MultiplayerClient && Counter == -80 && foundTarget && distanceFromTarget < 1400f)
             {
                 Vector2 direction = targetCenter - Projectile.Center;
-                Vector2 directionNormalized = direction.SafeNormalize(Vector2.UnitY);
-                ShootBalls(Projectile.Center, 9f, directionNormalized, 3);
+                ShootDonuts(Projectile.Center, 6f, direction.ToRotation(), 8);
             }
         }
 
-        private void ShootBalls(Vector2 position, float baseSpeed, Vector2 direction, int count)
+        private void ShootDonuts(Vector2 position, float speed, float offset, int count)
         {
             for (int i = 0; i < count; i++)
             {
-                float speed = baseSpeed + i * 2;
+                float angle = offset + MathHelper.TwoPi / count * i;
+                Vector2 direction = new Vector2(0, -1).RotatedBy(angle);
+
                 var entitySource = Projectile.GetSource_FromAI();
-                int type = ModContent.ProjectileType<BasicLargeBallBlueFriendly>();
+                int type = ModContent.ProjectileType<BasicDonutRedFriendly>();
                 Projectile.NewProjectile(entitySource, position, direction * speed, type, Projectile.damage, Projectile.knockBack, Main.myPlayer);
             }
         }
@@ -259,23 +274,55 @@ namespace DimDream.Content.Projectiles
         {
             int frameSpeed = 6;
 
+            int firstMoving = 8;
+            int lastFrame = 14;
+            int deadFrame = 15;
+
+            Projectile.spriteDirection = Projectile.velocity.X >= 0 ? 1 : -1;
+            Projectile.alpha = Counter < 0 && Counter > -80 ? 150 : 0;
+
             Projectile.frameCounter++;
 
-            if (Projectile.frameCounter >= frameSpeed)
+            if (Counter < 0 && Counter >= -80)
+                Projectile.frame = deadFrame;
+            else if (SlowMoving)
+                switch (Projectile.velocity.X)
+                {
+                    case > .5f:
+                        Projectile.frame = firstMoving + 2;
+                        break;
+                    case > .3f:
+                        Projectile.frame = firstMoving + 1;
+                        break;
+                    default:
+                        Projectile.frame = firstMoving;
+                        break;
+                }
+            else if (Projectile.frameCounter >= frameSpeed)
             {
                 Projectile.frameCounter = 0;
                 Projectile.frame++;
 
-                if (Projectile.frame >= Main.projFrames[Projectile.type])
+                if (Math.Abs(Projectile.velocity.X) > .5f)
                 {
-                    Projectile.frame = 0;
+                    if (Projectile.frame < firstMoving)
+                        Projectile.frame = firstMoving;
+                    if (Projectile.frame > lastFrame)
+                        Projectile.frame = firstMoving + 2;
                 }
-
-                CreateDust();
+                else if (Projectile.frame >= firstMoving)
+                {
+                    if (Projectile.frame > lastFrame || Projectile.frame == firstMoving)
+                        Projectile.frame = 0;
+                    else
+                        Projectile.frame -= 2;
+                }
             }
 
-
-            Lighting.AddLight(Projectile.Center, Color.White.ToVector3() * 0.78f);
+            if (Counter > 0 || Counter < -80)
+                Lighting.AddLight(Projectile.Center, Color.White.ToVector3() * 0.78f);
+            else if (Counter % 6 == 0)
+                CreateDust();
         }
 
         private void CreateDust()

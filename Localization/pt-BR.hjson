@@ -119,6 +119,26 @@ Mods: {
 				// DisplayName: Vengeful Spirit Staff
 				// Tooltip: ""
 			}
+
+			CursedStick: {
+				// DisplayName: Cursed Stick
+				// Tooltip: ""
+			}
+
+			KashasPaw: {
+				// DisplayName: Kashas Paw
+				// Tooltip: ""
+			}
+
+			BarrowsWheel: {
+				// DisplayName: Barrows Wheel
+				// Tooltip: ""
+			}
+
+			ZombieFairyStaff: {
+				// DisplayName: Zombie Fairy Staff
+				// Tooltip: ""
+			}
 		}
 
 		Projectiles: {
@@ -169,6 +189,12 @@ Mods: {
 			// BasicDonutRed.DisplayName: Basic Donut Red
 			// BasicLargeBallBlueFriendly.DisplayName: Basic Large Ball Blue Friendly
 			// VengefulSpiritSummon.DisplayName: Vengeful Spirit Summon
+			// VengefulSpiritSpin.DisplayName: Vengeful Spirit Spin
+			// VengefulSpiritHoming.DisplayName: Vengeful Spirit Homing
+			// BarrowsWheelProjectile.DisplayName: Barrows Wheel Projectile
+			// BasicSpiralBulletFriendly.DisplayName: Basic Spiral Bullet Friendly
+			// BasicDonutRedFriendly.DisplayName: Basic Donut Red Friendly
+			// ZombieFairySummon.DisplayName: Zombie Fairy Summon
 		}
 
 		Buffs: {
@@ -180,6 +206,11 @@ Mods: {
 			VengefulSpiritBuff: {
 				// DisplayName: Vengeful Spirit Buff
 				// Description: Mods.DimDream.Buffs.VengefulSpiritBuff.Description
+			}
+
+			ZombieFairyBuff: {
+				// DisplayName: Zombie Fairy Buff
+				// Description: Mods.DimDream.Buffs.ZombieFairyBuff.Description
 			}
 		}
 	}

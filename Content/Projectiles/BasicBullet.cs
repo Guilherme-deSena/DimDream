@@ -130,24 +130,21 @@ namespace DimDream.Content.Projectiles
             Projectile.aiStyle = -1;
             CooldownSlot = ImmunityCooldownID.Bosses; // use the boss immunity cooldown counter, to prevent ignoring boss attacks by taking damage from other sources
         }
-
-        public override void Despawn() { }
     }
 
     public class BasicLargeBallBlueFriendly : BasicLargeBallBlue
     {
         public override void SetDefaults()
         {
-            Projectile.width = 10;
-            Projectile.height = 10;
-            DrawOffsetX = -5;
-            DrawOriginOffsetY = -5;
+            Projectile.width = 20;
+            Projectile.height = 20;
             Projectile.alpha = 255;
             Projectile.timeLeft = 300;
             Projectile.friendly = true;
         }
-    }
 
+        public override void Despawn() { }
+    }
 
     public class BasicWhiteSpore : BasicBullet
     {
@@ -192,6 +189,20 @@ namespace DimDream.Content.Projectiles
         }
     }
 
+    public class BasicSpiralBulletFriendly : BasicSpiralBullet
+    {
+        public override void SetDefaults()
+        {
+            Projectile.width = 12;
+            Projectile.height = 12;
+            Projectile.alpha = 255;
+            Projectile.timeLeft = 100;
+            Projectile.friendly = true;
+        }
+
+        public override void Despawn() { }
+    }
+
     public class BasicDonutRed : BasicBullet
     {
         public override string Texture => "DimDream/Content/Projectiles/DonutRed";
@@ -211,5 +222,29 @@ namespace DimDream.Content.Projectiles
             Projectile.aiStyle = -1;
             CooldownSlot = ImmunityCooldownID.Bosses; // use the boss immunity cooldown counter, to prevent ignoring boss attacks by taking damage from other sources
         }
+    }
+
+    public class BasicDonutRedFriendly : BasicDonutRed
+    {
+        public override void SetDefaults()
+        {
+            Projectile.width = 10;
+            Projectile.height = 10;
+            DrawOffsetX = -35;
+            DrawOriginOffsetY = -35;
+            Projectile.alpha = 255;
+            Projectile.timeLeft = 100;
+            Projectile.friendly = true;
+        }
+        public override void ModifyDamageHitbox(ref Rectangle hitbox)
+        {
+            int newSize = 60; // NPC hitbox size (larger than tile hitbox)
+            hitbox = new Rectangle(
+                (int)(Projectile.Center.X - newSize / 2),
+                (int)(Projectile.Center.Y - newSize / 2),
+                newSize, newSize
+            );
+        }
+        public override void Despawn() { }
     }
 }
