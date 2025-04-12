@@ -18,6 +18,7 @@ using System.Diagnostics.Metrics;
 using DimDream.Content.BossBars;
 using Microsoft.CodeAnalysis.Text;
 using Terraria.ModLoader.Default;
+using Terraria.Graphics.Effects;
 
 namespace DimDream.Content.NPCs
 {
@@ -162,11 +163,11 @@ namespace DimDream.Content.NPCs
             LeadingConditionRule notExpertRule = new(new Conditions.NotExpert());
 
             // Notice we use notExpertRule.OnSuccess instead of npcLoot.Add so it only applies in normal mode
-            notExpertRule.OnSuccess(ItemDropRule.OneFromOptions(1, [ModContent.ItemType<YumemisCross>(), ModContent.ItemType<RedButton>(), ModContent.ItemType<IcbmLauncher>(), ModContent.ItemType<ArcaneBombBook>()]));
+            notExpertRule.OnSuccess(ItemDropRule.OneFromOptions(1, [ModContent.ItemType<Phantasmagoria>(), ModContent.ItemType<ZombieFairyStaff>(), ModContent.ItemType<KashasPaw>(), ModContent.ItemType<CursedStick>()]));
             npcLoot.Add(notExpertRule);
 
             // Add the treasure bag using ItemDropRule.BossBag (automatically checks for expert mode)
-            npcLoot.Add(ItemDropRule.BossBag(ModContent.ItemType<YumemiBag>()));
+            npcLoot.Add(ItemDropRule.BossBag(ModContent.ItemType<OrinBagHumanoid>()));
         }
 
         public override void OnKill()
@@ -246,7 +247,7 @@ namespace DimDream.Content.NPCs
             {
                 int timeFactor = !ShouldMoveSpellName ? 999 : Counter;
                 DrawNPC(spriteBatch, timeFactor);
-                DrawSpellName(spriteBatch, "Atonement \"Former Hell's Needle Mountain\" ", timeFactor);
+                DrawSpellName(spriteBatch, "Atonement \"Former Hell's Needle Mountain\"", timeFactor);
             } else if (StageHelper == 30)
             {
                 int timeFactor = !ShouldMoveSpellName ? 999 : Counter + 250;
@@ -797,6 +798,8 @@ namespace DimDream.Content.NPCs
                 }
             }
 
+            SkyManager.Instance.Activate("DimDream:BossSky");
+
             if (Counter == 60)
                 Casting = true;
 
@@ -874,6 +877,8 @@ namespace DimDream.Content.NPCs
                 }
 
             }
+
+            SkyManager.Instance.Activate("DimDream:BossSky");
 
             if (Counter >= 100 && Counter <= 210)
                 Casting = true;
@@ -964,6 +969,8 @@ namespace DimDream.Content.NPCs
                 }
             }
 
+            SkyManager.Instance.Activate("DimDream:BossSky");
+
             if (Counter == 1)
                 Casting = true;
 
@@ -1023,6 +1030,8 @@ namespace DimDream.Content.NPCs
                     PrePatternDust(Counter * 5, Pi);
                 }
             }
+
+            SkyManager.Instance.Activate("DimDream:BossSky");
 
             if (Counter >= 100)
                 Casting = true;

@@ -8,6 +8,9 @@
 		
 	</PropertyGroup>
 	<ItemGroup>
+	  <AdditionalFiles Remove="Content\Backgrounds\Sky.png" />
+	</ItemGroup>
+	<ItemGroup>
 	  <None Remove="assets\effects\SpellOrin.fx" />
 	</ItemGroup>
 	<ItemGroup>

@@ -21,7 +21,7 @@ namespace DimDream.Content.Items.Weapons
         public override void SetDefaults()
         {
             Item.DefaultToStaff(ModContent.ProjectileType<VengefulSpiritSpin>(), 14, 45, 18);
-            Item.SetWeaponValues(30, 2);
+            Item.SetWeaponValues(72, 2);
             Item.SetShopValues(ItemRarityColor.Green2, 70000);
             Item.width = 38;
             Item.height = 34;

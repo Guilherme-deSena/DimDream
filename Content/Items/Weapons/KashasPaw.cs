@@ -14,7 +14,7 @@ namespace DimDream.Content.Items.Weapons
             Item.useStyle = ItemUseStyleID.Swing;
             Item.useAnimation = 12;
             Item.useTime = 12;
-            Item.damage = 10;
+            Item.damage = 82;
             Item.crit = 4;
             Item.knockBack = 10f;
             Item.shootSpeed = 8f;

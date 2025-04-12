@@ -139,6 +139,21 @@ Mods: {
 				DisplayName: Zombie Fairy Staff
 				Tooltip: ""
 			}
+
+			Phantasmagoria: {
+				DisplayName: Phantasmagoria
+				Tooltip: ""
+			}
+
+			OrinBagCat: {
+				DisplayName: Orin Bag Cat
+				Tooltip: ""
+			}
+
+			OrinBagHumanoid: {
+				DisplayName: Orin Bag Humanoid
+				Tooltip: ""
+			}
 		}
 
 		Projectiles: {
@@ -195,6 +210,7 @@ Mods: {
 			BasicSpiralBulletFriendly.DisplayName: Basic Spiral Bullet Friendly
 			BasicDonutRedFriendly.DisplayName: Basic Donut Red Friendly
 			ZombieFairySummon.DisplayName: Zombie Fairy Summon
+			GhostBullet.DisplayName: Ghost Bullet
 		}
 
 		Buffs: {

@@ -18,6 +18,8 @@ using DimDream.Content.Items.Consumables;
 using System.Diagnostics.Metrics;
 using DimDream.Content.BossBars;
 using Microsoft.CodeAnalysis.Text;
+using DimDream.Common.Sky;
+using DimDream.Content.Items.Accessories;
 
 namespace DimDream.Content.NPCs
 {
@@ -134,16 +136,18 @@ namespace DimDream.Content.NPCs
             LeadingConditionRule notExpertRule = new(new Conditions.NotExpert());
 
             // Notice we use notExpertRule.OnSuccess instead of npcLoot.Add so it only applies in normal mode
-            notExpertRule.OnSuccess(ItemDropRule.OneFromOptions(1, [ModContent.ItemType<YumemisCross>(), ModContent.ItemType<RedButton>(), ModContent.ItemType<IcbmLauncher>(), ModContent.ItemType<ArcaneBombBook>()]));
+            notExpertRule.OnSuccess(ItemDropRule.OneFromOptions(1, [ModContent.ItemType<BarrowsWheel>(), ModContent.ItemType<VengefulSpiritStaff>()]));
+            notExpertRule.OnSuccess(ItemDropRule.Common(ModContent.ItemType<OrinsCartEnabled>(), 4));
             npcLoot.Add(notExpertRule);
 
             // Add the treasure bag using ItemDropRule.BossBag (automatically checks for expert mode)
-            npcLoot.Add(ItemDropRule.BossBag(ModContent.ItemType<YumemiBag>()));
+            npcLoot.Add(ItemDropRule.BossBag(ModContent.ItemType<OrinBagCat>()));
         }
 
         public override void OnKill()
         {
             // This sets downedYumemiBoss to true, and if it was false before, it initiates a lantern night
+
             NPC.SetEventFlagCleared(ref DownedBossSystem.downedYumemiBoss, -1);
         }
 
@@ -184,6 +188,7 @@ namespace DimDream.Content.NPCs
                 return false;
             }
 
+            SkyManager.Instance.Deactivate("DimDream:BossSky");
             return true;
         }
 
@@ -237,7 +242,6 @@ namespace DimDream.Content.NPCs
             Player player = Main.player[NPC.target];
             if (NPC.target < 0 || NPC.target == 255 || player.dead || !player.active || Vector2.Distance(NPC.Center, player.Center) > 3000f)
                 NPC.TargetClosest();
-
             player = Main.player[NPC.target];
 
             if (!Initialized) // Initialize stuff that cannot be initialized in SetDefaults()
@@ -685,6 +689,8 @@ namespace DimDream.Content.NPCs
                 if (Counter >= 640)
                     GoToDefaultPosition();
             }
+
+            SkyManager.Instance.Activate("DimDream:BossSky");
 
             if (StageHelper < 12)
             {
