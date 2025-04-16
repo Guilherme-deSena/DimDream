@@ -109,9 +109,9 @@ namespace DimDream.Content.NPCs
         {
             NPC.width = 92;
             NPC.height = 78;
-            NPC.damage = 40;
+            NPC.damage = 18;
             NPC.defense = 22;
-            NPC.lifeMax = GetRawHealth(20000, 12500, 10000);
+            NPC.lifeMax = GetRawHealth(3000, 2000, 1500);
             NPC.HitSound = SoundID.NPCHit1;
             NPC.DeathSound = SoundID.NPCDeath1;
             NPC.knockBackResist = 0f;
@@ -146,9 +146,7 @@ namespace DimDream.Content.NPCs
 
         public override void OnKill()
         {
-            // This sets downedYumemiBoss to true, and if it was false before, it initiates a lantern night
-
-            NPC.SetEventFlagCleared(ref DownedBossSystem.downedYumemiBoss, -1);
+            NPC.SetEventFlagCleared(ref DownedBossSystem.downedOrinBossCat, -1);
         }
 
         public override void SetBestiary(BestiaryDatabase database, BestiaryEntry bestiaryEntry)
@@ -184,7 +182,7 @@ namespace DimDream.Content.NPCs
                 StageHelper = 10;
                 NPC.life = 1;
                 NPC.dontTakeDamage = true;
-                NPC.lifeMax = GetRawHealth(80000, 105000, 130000);
+                NPC.lifeMax = GetRawHealth(16000, 12000, 9500);
                 return false;
             }
 
@@ -197,10 +195,10 @@ namespace DimDream.Content.NPCs
             if (StageHelper == 12 && !NPC.dontTakeDamage)
             {
                 int timeFactor = !ShouldMoveSpellName ? 999 : Counter + 100;
+                DrawNPC(spriteBatch, timeFactor);
                 DrawSpellName(spriteBatch, "Cat Sign \"Cat's Walk\"", timeFactor);
             }
 
-            //DrawNPC(spriteBatch, new(Main.miniMapX - Main.miniMapWidth / 2 - 400, Main.miniMapY));
 
             return true;
         }
@@ -215,25 +213,29 @@ namespace DimDream.Content.NPCs
             spriteBatch.DrawString(font, spellName, position, Color.White);
         }
 
-        public void DrawNPC(SpriteBatch spriteBatch, Vector2 position)
+        public void DrawNPC(SpriteBatch spriteBatch, int timeFactor)
         {
             Texture2D npcTexture = TextureAssets.Npc[NPC.type].Value;
             int frameHeight = npcTexture.Height / Main.npcFrameCount[NPC.type];
-            Rectangle sourceRectangle = new Rectangle(0, 0, npcTexture.Width, frameHeight);
+            float scale = 4;
+            Rectangle sourceRectangle = new(0, 0, npcTexture.Width, frameHeight);
+
+            float offset = Math.Min(timeFactor, 30) * .015f + Math.Clamp(timeFactor - 30, 0, 130) * .001f + Math.Max(timeFactor - 150, 0) * .015f;
+
+            Vector2 position = new(Main.screenWidth + npcTexture.Width / 2 - Main.screenWidth * offset,
+                                   Main.screenHeight * .3f + frameHeight / 2 + Main.screenHeight * .4f * offset);
             Vector2 origin = sourceRectangle.Size() / 2f;
 
             spriteBatch.Draw(
                 npcTexture,
                 position,
                 sourceRectangle,
-                Color.White,
+                Color.White * .5f,
                 0,
                 origin,
-                NPC.scale,
+                scale,
                 SpriteEffects.None,
                 0f);
-
-
         }
 
         public override void AI()
@@ -339,6 +341,8 @@ namespace DimDream.Content.NPCs
             }
         }
 
+        // Return health before changes from difficulty. For example, if classic should have 2000 health and expert should have 3000,
+        // then this should use 2000 for classic and 1500 for expert, since the game automatically doubles health in expert.
         public int GetRawHealth(int classic, int expert, int master)
         {
             if (Main.masterMode)
@@ -409,8 +413,11 @@ namespace DimDream.Content.NPCs
 
             NPC npc = NPC.NewNPCDirect(entitySource, (int)position.X, (int)position.Y, type, NPC.whoAmI);
             npc.damage = NPC.damage;
+            npc.lifeMax = 100;
+            npc.life = 100;
             OrinEvilSpiritCircleStill spirit = (OrinEvilSpiritCircleStill)npc.ModNPC;
             spirit.ParentIndex = NPC.whoAmI;
+
         }
 
         public void SpawnBurstSpirits(int distance, float offset, int spiritCount, int timeLeft)
@@ -427,6 +434,8 @@ namespace DimDream.Content.NPCs
                 NPC spirit = NPC.NewNPCDirect(entitySource, position, type, NPC.whoAmI, timeLeft);
                 spirit.velocity = -velocity * speed;
                 spirit.damage = NPC.damage;
+                spirit.lifeMax = 50;
+                spirit.life = 50;
                 
                 OrinEvilSpiritBurst s = (OrinEvilSpiritBurst)spirit.ModNPC;
                 s.ParentIndex = NPC.whoAmI;
@@ -468,7 +477,7 @@ namespace DimDream.Content.NPCs
 
         public void AlternatingJump(int side)
         {
-            Vector2 direction = new(500 * side, 100);
+            Vector2 direction = new(500 * side, 60);
 
             Destination = NPC.Center + direction;
             NPC.netUpdate = true;
@@ -559,7 +568,7 @@ namespace DimDream.Content.NPCs
                 if (Counter == 1)
                     GoToDefaultPosition();
 
-                if (Counter > 400 && Counter % 10 == 0 && Counter < 900)
+                if (Counter > 400 && Counter % 16 == 0 && Counter < 900)
                 {
                     float angle = Counter <= 500 ? 0 : MathF.Sin(Counter - 500) + Main.rand.NextFloat(Pi/20);
                     int distance = Math.Abs(650 - Counter);
@@ -568,7 +577,7 @@ namespace DimDream.Content.NPCs
                     Circle(NPC.Center, distance, angle, .5f, 16, type, 20);
 
                     angle = MathF.Sin(Counter - 400) + Main.rand.NextFloat(Pi / 20);
-                    if (Counter < 650 && Counter % 20 == 0)
+                    if (Counter < 650)
                         SpawnBurstSpirits(distance, angle, 5, 1200 - Counter);
                 }
             }
@@ -596,10 +605,10 @@ namespace DimDream.Content.NPCs
                     int start = Counter - 200;
                     float distance = start / 2;
                     int frameToSpeedUp = 400 - start * 3;
-                    float offset = Pi / 200 * Math.Abs(60 - start) * Inverter;
+                    float offset = Pi / 300 * Math.Abs(60 - start) * Inverter;
                     int type = ModContent.ProjectileType<SpeedUpDiamondBlue>();
 
-                    Circle(NPC.Center, distance, offset, .01f, 20, type, frameToSpeedUp);
+                    Circle(NPC.Center, distance, offset, .01f, 16, type, frameToSpeedUp);
                 }
             }
 
@@ -623,7 +632,7 @@ namespace DimDream.Content.NPCs
                     float distance = start;
                     int frameToSpeedUp = 400 - start * 3;
                     float speed = .01f;
-                    int count = Counter < 150 ? 15 : 30;
+                    int count = Counter < 150 ? 10 : 20;
                     int type = ModContent.ProjectileType<SpeedUpDiamondRed>();
                     SavedRandom += Counter < 150 ? Main.rand.NextFloat(-Pi / 30, Pi / 30) + Pi / 100 * Inverter 
                         : Pi / 100 * -Inverter;
@@ -673,7 +682,7 @@ namespace DimDream.Content.NPCs
                     float distance = 50 + start * 5;
                     int frameToSpeedUp = 400 - start;
                     float speed = .01f;
-                    int count = 18;
+                    int count = 12;
                     int type = ModContent.ProjectileType<SpeedUpDiamondChangeColor>();
                     SavedRandom += Main.rand.NextFloat(-Pi / 30, Pi / 30) + Pi / 100 * Inverter;
 

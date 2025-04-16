@@ -14,11 +14,15 @@ namespace DimDream.Common.Systems
 	{
 		public static bool downedChiyuriBoss = false;
         public static bool downedYumemiBoss = false;
+        public static bool downedOrinBossCat = false;
+        public static bool downedOrinBossHumanoid = false;
 
         public override void ClearWorld() {
 			downedChiyuriBoss = false;
 			downedYumemiBoss = false;
-		}
+            downedOrinBossCat = false;
+			downedOrinBossHumanoid = false;
+    }
 
 		// We save our data sets using TagCompounds.
 		// NOTE: The tag instance provided here is always empty by default.
@@ -30,11 +34,21 @@ namespace DimDream.Common.Systems
             {
                 tag["downedYumemiBoss"] = true;
             }
+            if (downedOrinBossCat)
+            {
+                tag["downedOrinBossCat"] = true;
+            }
+            if (downedOrinBossHumanoid)
+            {
+                tag["downedOrinBossHumanoid"] = true;
+            }
         }
 
 		public override void LoadWorldData(TagCompound tag) {
 			downedChiyuriBoss = tag.ContainsKey("downedChiyuriBoss");
             downedYumemiBoss = tag.ContainsKey("downedYumemiBoss");
+            downedOrinBossCat = tag.ContainsKey("downedOrinBossCat");
+            downedOrinBossHumanoid = tag.ContainsKey("downedOrinBossHumanoid");
         }
 
 		public override void NetSend(BinaryWriter writer) {
@@ -42,6 +56,8 @@ namespace DimDream.Common.Systems
 			var flags = new BitsByte();
 			flags[0] = downedChiyuriBoss;
             flags[1] = downedChiyuriBoss;
+            flags[2] = downedOrinBossCat;
+            flags[3] = downedOrinBossHumanoid;
             writer.Write(flags);
 
 			/*
@@ -94,6 +110,8 @@ namespace DimDream.Common.Systems
 			BitsByte flags = reader.ReadByte();
 			downedChiyuriBoss = flags[0];
             downedYumemiBoss = flags[1];
+            downedOrinBossCat = flags[2];
+			downedOrinBossHumanoid = flags[3];
 
             // As mentioned in NetSend, BitBytes can contain up to 8 values. If you have more, be sure to read the additional data:
             // BitsByte flags2 = reader.ReadByte();

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using Terraria.Localization;
 using Terraria.ModLoader;
+using DimDream.Content.Items.Consumables;
 
 namespace DimDream.Common.Systems
 {
@@ -56,7 +57,7 @@ namespace DimDream.Common.Systems
             int bossType = ModContent.NPCType<Content.NPCs.ChiyuriBoss>();
 
             // The item used to summon the boss with (if available)
-            int spawnItem = ModContent.ItemType<Content.Items.Consumables.MiniatureHypervessel>();
+            int spawnItem = ModContent.ItemType<MiniatureHypervessel>();
 
             LocalizedText spawnInfo = Language.GetText("Mods.DimDream.NPCs.ChiyuriBoss.SpawnInfo");
             // "collectibles" like relic, trophy, mask, pet
@@ -95,8 +96,50 @@ namespace DimDream.Common.Systems
             weight = 11.2f;
             downed = () => DownedBossSystem.downedYumemiBoss;
             bossType = ModContent.NPCType<Content.NPCs.YumemiBoss>();
-            spawnItem = ModContent.ItemType<Content.Items.Consumables.PocketCollider>();
+            spawnItem = ModContent.ItemType<PocketCollider>();
             spawnInfo = Language.GetText("Mods.DimDream.NPCs.YumemiBoss.SpawnInfo");
+
+            bossChecklistMod.Call(
+                "LogBoss",
+                Mod,
+                internalName,
+                weight,
+                downed,
+                bossType,
+                new Dictionary<string, object>()
+                {
+                    ["spawnItems"] = spawnItem,
+                    ["spawnInfo"] = spawnInfo
+                }
+            );
+
+            internalName = "OrinBossCat";
+            weight = 5.1f;
+            downed = () => DownedBossSystem.downedOrinBossCat;
+            bossType = ModContent.NPCType<Content.NPCs.OrinBossCat>();
+            spawnItem = ModContent.ItemType<CorpseCoffin>();
+            spawnInfo = Language.GetText("Mods.DimDream.NPCs.OrinBossCat.SpawnInfo");
+
+            bossChecklistMod.Call(
+                "LogBoss",
+                Mod,
+                internalName,
+                weight,
+                downed,
+                bossType,
+                new Dictionary<string, object>()
+                {
+                    ["spawnItems"] = spawnItem,
+                    ["spawnInfo"] = spawnInfo
+                }
+            );
+
+            internalName = "OrinBossHumanoid";
+            weight = 12.1f;
+            downed = () => DownedBossSystem.downedOrinBossHumanoid;
+            bossType = ModContent.NPCType<Content.NPCs.OrinBossHumanoid>();
+            spawnItem = ModContent.ItemType<GhostCoffin>();
+            spawnInfo = Language.GetText("Mods.DimDream.NPCs.OrinBossHumanoid.SpawnInfo");
 
             bossChecklistMod.Call(
                 "LogBoss",

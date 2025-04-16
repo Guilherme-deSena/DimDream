@@ -172,8 +172,7 @@ namespace DimDream.Content.NPCs
 
         public override void OnKill()
         {
-            // This sets downedYumemiBoss to true, and if it was false before, it initiates a lantern night
-            NPC.SetEventFlagCleared(ref DownedBossSystem.downedYumemiBoss, -1);
+            NPC.SetEventFlagCleared(ref DownedBossSystem.downedOrinBossHumanoid, -1);
         }
 
         public override void SetBestiary(BestiaryDatabase database, BestiaryEntry bestiaryEntry)

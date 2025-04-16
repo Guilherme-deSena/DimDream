@@ -8,11 +8,10 @@ using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria;
-using Microsoft.Xna.Framework;
 
 namespace DimDream.Content.Items.Consumables
 {
-    internal class CorpseCoffin : ModItem
+    internal class GhostCoffin : ModItem
     {
         public override void SetStaticDefaults()
         {
@@ -69,10 +68,16 @@ namespace DimDream.Content.Items.Consumables
         public override void AddRecipes()
         {
             CreateRecipe()
+                .AddIngredient(ItemID.Ectoplasm, 5)
                 .AddIngredient(ItemID.PurificationPowder, 10)
                 .AddRecipeGroup(RecipeGroupID.Wood, 10)
-                .AddRecipeGroup(nameof(ItemID.RottenChunk), 5)
                 .AddRecipeGroup(nameof(ItemID.Tombstone), 1)
+                .AddTile(TileID.Anvils)
+                .Register();
+
+            CreateRecipe()
+                .AddIngredient(ModContent.ItemType<CorpseCoffin>(), 1)
+                .AddIngredient(ItemID.Ectoplasm, 5)
                 .AddTile(TileID.Anvils)
                 .Register();
         }

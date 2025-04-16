@@ -11,25 +11,32 @@ Mods: {
 				SpawnInfo: Use a [i:DimDream/PocketCollider] at any time or place.
 			}
 
-			OrinBoss.DisplayName: Orin Boss
+			OrinBossCat: {
+				DisplayName: Orin
+				SpawnInfo: Use a [i:DimDream/CorpseCoffin] at any time or place.
+			}
+
+			OrinBossHumanoid: {
+				DisplayName: Rin Kaenbyou
+				SpawnInfo: Use a [i:DimDream/GhostCoffin] at any time or place.
+			}
+
 			EvilSpirit.DisplayName: Evil Spirit
-			OrinEvilSpirit.DisplayName: Orin Evil Spirit
-			OrinEvilSpiritBlue.DisplayName: Orin Evil Spirit Blue
-			OrinEvilSpiritRed.DisplayName: Orin Evil Spirit Red
-			OrinBossCat.DisplayName: Orin Boss Cat
-			OrinBossHumanoid.DisplayName: Orin Boss Humanoid
-			FairyZombie.DisplayName: Fairy Zombie
-			OrinFairyZombie.DisplayName: Orin Fairy Zombie
-			OrinFairyZombieGhostly.DisplayName: Orin Fairy Zombie Ghostly
-			OrinFairy.DisplayName: Orin Fairy
-			OrinEvilSpiritExplode.DisplayName: Orin Evil Spirit Explode
-			OrinEvilSpiritSpiral.DisplayName: Orin Evil Spirit Spiral
-			OrinEvilSpiritBurst.DisplayName: Orin Evil Spirit Burst
-			OrinEvilSpiritCircleStill.DisplayName: Orin Evil Spirit Circle Still
-			OrinEvilSpiritCircleThrust.DisplayName: Orin Evil Spirit Circle Thrust
-			OrinEvilSpiritRotating.DisplayName: Orin Evil Spirit Rotating
-			OrinFairyZombieBalls.DisplayName: Orin Fairy Zombie Balls
-			OrinFairyZombieSpores.DisplayName: Orin Fairy Zombie Spores
+			OrinEvilSpirit.DisplayName: Evil Spirit
+			OrinEvilSpiritBlue.DisplayName: Evil Spirit
+			OrinEvilSpiritRed.DisplayName: Evil Spirit
+			FairyZombie.DisplayName: Zombie Fairy
+			OrinFairyZombie.DisplayName: Zombie Fairy
+			OrinFairyZombieGhostly.DisplayName: Zombie Fairy
+			OrinFairy.DisplayName: Fairy
+			OrinEvilSpiritExplode.DisplayName: Evil Spirit
+			OrinEvilSpiritSpiral.DisplayName: Evil Spirit
+			OrinEvilSpiritBurst.DisplayName: Evil Spirit
+			OrinEvilSpiritCircleStill.DisplayName: Evil Spirit
+			OrinEvilSpiritCircleThrust.DisplayName: Evil Spirit
+			OrinEvilSpiritRotating.DisplayName: Evil Spirit
+			OrinFairyZombieBalls.DisplayName: Zombie Fairy
+			OrinFairyZombieSpores.DisplayName: Zombie Fairy
 		}
 
 		Items: {
@@ -96,63 +103,75 @@ Mods: {
 			}
 
 			CorpseCoffin: {
-				DisplayName: Corpse Coffin
-				Tooltip: ""
-			}
-
-			OrinsCart: {
-				DisplayName: Orins Cart
-				Tooltip: ""
+				DisplayName: Fresh Corpse in a Coffin
+				Tooltip: Summons Orin, The Treacherous Deathcat
 			}
 
 			OrinsCartDisabled: {
-				DisplayName: Orins Cart Disabled
-				Tooltip: ""
+				DisplayName: Orin's Wheelbarrow
+				Tooltip:
+					'''
+					A handy cart that allows you to carry as many corpses as you want
+					Teammates will respawn on top of you
+
+					Currently [c/FF0000:DISABLED] (right-click to [c/00FF00:enable])
+					'''
 			}
 
 			OrinsCartEnabled: {
-				DisplayName: Orins Cart Enabled
-				Tooltip: ""
+				DisplayName: Orin's Wheelbarrow
+				Tooltip:
+					'''
+					A handy cart that allows you to carry as many corpses as you want
+					Teammates will respawn on top of you
+
+					Currently [c/00FF00:ENABLED] (right-click to [c/FF0000:disable])
+					'''
 			}
 
 			VengefulSpiritStaff: {
 				DisplayName: Vengeful Spirit Staff
-				Tooltip: ""
+				Tooltip: Summons a spirit from Former Hell to fight for you
 			}
 
 			CursedStick: {
 				DisplayName: Cursed Stick
-				Tooltip: ""
+				Tooltip: Shoots a barrage of vengeful spirits
 			}
 
 			KashasPaw: {
-				DisplayName: Kashas Paw
-				Tooltip: ""
+				DisplayName: Kasha's Paw
+				Tooltip: Has a chance, based on your critical chance, to shoot a homing vengeful spirit
 			}
 
 			BarrowsWheel: {
-				DisplayName: Barrows Wheel
-				Tooltip: ""
+				DisplayName: Barrow's Wheel
+				Tooltip: Shoots smallers wheels all around it
 			}
 
 			ZombieFairyStaff: {
 				DisplayName: Zombie Fairy Staff
-				Tooltip: ""
+				Tooltip: Summons an explosive zombie fairy to fight for you
 			}
 
 			Phantasmagoria: {
 				DisplayName: Phantasmagoria
-				Tooltip: ""
+				Tooltip: Converts bullets into spirits
 			}
 
 			OrinBagCat: {
-				DisplayName: Orin Bag Cat
-				Tooltip: ""
+				DisplayName: Treasure Bag (Orin)
+				Tooltip: "{$CommonItemTooltip.RightClickToOpen}"
 			}
 
 			OrinBagHumanoid: {
-				DisplayName: Orin Bag Humanoid
-				Tooltip: ""
+				DisplayName: Treasure Bag (Rin Kaenbyou)
+				Tooltip: "{$CommonItemTooltip.RightClickToOpen}"
+			}
+
+			GhostCoffin: {
+				DisplayName: Ghost in a Coffin
+				Tooltip: Summons Rin Kaenbyou, Hell's Traffic Accident
 			}
 		}
 
@@ -177,39 +196,39 @@ Mods: {
 			ArcaneFragment.DisplayName: Arcane Fragment
 			CrossWeapon.DisplayName: Cross
 			CrossBoss.DisplayName: Cross
-			LargeBallRed.DisplayName: Large Ball Red
+			LargeBallRed.DisplayName: Large Ball
 			LargeBall.DisplayName: Large Ball
 			Rice.DisplayName: Rice
-			LargeBallBlue.DisplayName: Large Ball Blue
+			LargeBallBlue.DisplayName: Large Ball
 			Diamond.DisplayName: Diamond
-			DiamondBlue.DisplayName: Diamond Blue
-			DiamondRed.DisplayName: Diamond Red
+			DiamondBlue.DisplayName: Diamond
+			DiamondRed.DisplayName: Diamond
 			SpiralBullet.DisplayName: Spiral Bullet
-			OrinWhiteSpore.DisplayName: Orin White Spore
+			OrinWhiteSpore.DisplayName: White Spore
 			Nuke.DisplayName: Nuke
 			SpeedUpBullet.DisplayName: Speed Up Bullet
-			SpeedUpDiamondBlue.DisplayName: Speed Up Diamond Blue
-			SpeedUpDiamondChangeColor.DisplayName: Speed Up Diamond Change Color
-			SpeedUpDiamondRed.DisplayName: Speed Up Diamond Red
-			SpeedUpRiceRed.DisplayName: Speed Up Rice Red
+			SpeedUpDiamondBlue.DisplayName: Diamond
+			SpeedUpDiamondChangeColor.DisplayName: Diamond
+			SpeedUpDiamondRed.DisplayName: Diamond
+			SpeedUpRiceRed.DisplayName: Rice
 			BasicBullet.DisplayName: Basic Bullet
-			BasicLargeBallBlue.DisplayName: Basic Large Ball Blue
-			SpeedUpLargeBallBlue.DisplayName: Speed Up Large Ball Blue
-			SpeedUpLargeBallRed.DisplayName: Speed Up Large Ball Red
-			BasicWhiteSpore.DisplayName: Basic White Spore
-			BasicSpiralBullet.DisplayName: Basic Spiral Bullet
+			BasicLargeBallBlue.DisplayName: Large Ball
+			SpeedUpLargeBallBlue.DisplayName: Large Ball
+			SpeedUpLargeBallRed.DisplayName: Large Ball
+			BasicWhiteSpore.DisplayName: White Spore
+			BasicSpiralBullet.DisplayName: Spiral Bullet
 			SlowDownBullet.DisplayName: Slow Down Bullet
-			SlowDownLargeBallBlue.DisplayName: Slow Down Large Ball Blue
-			SpeedUpRiceBlue.DisplayName: Speed Up Rice Blue
-			BasicDonutRed.DisplayName: Basic Donut Red
-			BasicLargeBallBlueFriendly.DisplayName: Basic Large Ball Blue Friendly
-			VengefulSpiritSummon.DisplayName: Vengeful Spirit Summon
-			VengefulSpiritSpin.DisplayName: Vengeful Spirit Spin
-			VengefulSpiritHoming.DisplayName: Vengeful Spirit Homing
-			BarrowsWheelProjectile.DisplayName: Barrows Wheel Projectile
-			BasicSpiralBulletFriendly.DisplayName: Basic Spiral Bullet Friendly
-			BasicDonutRedFriendly.DisplayName: Basic Donut Red Friendly
-			ZombieFairySummon.DisplayName: Zombie Fairy Summon
+			SlowDownLargeBallBlue.DisplayName: Large Ball
+			SpeedUpRiceBlue.DisplayName: Rice
+			BasicDonutRed.DisplayName: Donut
+			BasicLargeBallBlueFriendly.DisplayName: Large Ball
+			VengefulSpiritSummon.DisplayName: Vengeful Spirit
+			VengefulSpiritSpin.DisplayName: Vengeful Spirit
+			VengefulSpiritHoming.DisplayName: Vengeful Spirit
+			BarrowsWheelProjectile.DisplayName: Barrows Wheel
+			BasicSpiralBulletFriendly.DisplayName: Spiral Bullet
+			BasicDonutRedFriendly.DisplayName: Donut
+			ZombieFairySummon.DisplayName: Zombie Fairy
 			GhostBullet.DisplayName: Ghost Bullet
 		}
 
@@ -221,12 +240,12 @@ Mods: {
 
 			VengefulSpiritBuff: {
 				DisplayName: Vengeful Spirit Buff
-				Description: Mods.DimDream.Buffs.VengefulSpiritBuff.Description
+				Description: Vengeful Spirit will fight for you
 			}
 
 			ZombieFairyBuff: {
 				DisplayName: Zombie Fairy Buff
-				Description: Mods.DimDream.Buffs.ZombieFairyBuff.Description
+				Description: Zombie Fairy will fight for you
 			}
 		}
 	}

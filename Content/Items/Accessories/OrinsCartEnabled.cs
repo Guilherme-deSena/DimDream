@@ -29,13 +29,6 @@ namespace DimDream.Content.Items.Accessories
             Item.SetDefaults(ModContent.ItemType<OrinsCartDisabled>());
             Item.stack++;
         }
-
-
-        public override void ModifyTooltips(System.Collections.Generic.List<TooltipLine> tooltips)
-        {
-            string status = "[c/00ff00:Enabled]";
-            tooltips.Add(new TooltipLine(Mod, "RevivalStatus", "Status: " + status));
-        }
     }
 
     public class OrinsCartDisabled : OrinsCartEnabled
@@ -46,12 +39,6 @@ namespace DimDream.Content.Items.Accessories
         {
             Item.SetDefaults(ModContent.ItemType<OrinsCartEnabled>());
             Item.stack++;
-        }
-
-        public override void ModifyTooltips(System.Collections.Generic.List<TooltipLine> tooltips)
-        {
-            string status = "[c/ff0000:Disabled]";
-            tooltips.Add(new TooltipLine(Mod, "RevivalStatus", "Status: " + status));
         }
     }
 }
