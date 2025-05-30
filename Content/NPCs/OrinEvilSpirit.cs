@@ -260,7 +260,7 @@ namespace DimDream.Content.NPCs
             if (Counter % 6 == 0)
                 CreateDust();
 
-            if (Counter % 20 == 0)
+            if (Counter % 30 == 0)
             {
                 float offset = NPC.velocity.SafeNormalize(Vector2.UnitY).ToRotation() - MathHelper.Pi / 14;
                 Circle(NPC.Center, 20, offset, 1f, 7, ModContent.ProjectileType<SpeedUpLargeBallBlue>(), 0);

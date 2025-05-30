@@ -152,7 +152,7 @@ namespace DimDream.Content.NPCs
 
             if (!Main.dedServ)
             {
-                Music = MusicLoader.GetMusicSlot(Mod, "Assets/Music/StrawberryCrisis");
+                Music = MusicLoader.GetMusicSlot(Mod, "Assets/Music/GoodCheer");
             }
         }
 
@@ -907,7 +907,7 @@ namespace DimDream.Content.NPCs
                 {
                     Vector2 defaultPosition = new(0, -350f);
                     float offset = (defaultPosition + ArenaCenter - NPC.Center).ToRotation();
-                    SpawnThrustingSpirits(CastingPosition, 80, 4, 7, 180, offset);
+                    SpawnThrustingSpirits(CastingPosition, 150, 4, 7, 180, offset);
                 }
 
                 if (Counter == 180)

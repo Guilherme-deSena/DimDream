@@ -58,10 +58,10 @@ namespace DimDream.Content.NPCs
                 if (StageHelper <= 1)
                     return 1;
 
-                if (NPC.life > NPC.lifeMax * .8f)
+                if (NPC.life > NPC.lifeMax * .7f)
                     return 2;
 
-                if (NPC.life > NPC.lifeMax * .5f)
+                if (NPC.life > NPC.lifeMax * .35f)
                     return 3;
 
                 return 4;
@@ -111,7 +111,7 @@ namespace DimDream.Content.NPCs
             NPC.height = 78;
             NPC.damage = 18;
             NPC.defense = 22;
-            NPC.lifeMax = GetRawHealth(3000, 2000, 1500);
+            NPC.lifeMax = GetRawHealth(2000, 1500, 1300);
             NPC.HitSound = SoundID.NPCHit1;
             NPC.DeathSound = SoundID.NPCDeath1;
             NPC.knockBackResist = 0f;
@@ -126,7 +126,7 @@ namespace DimDream.Content.NPCs
 
             if (!Main.dedServ)
             {
-                Music = MusicLoader.GetMusicSlot(Mod, "Assets/Music/StrawberryCrisis");
+                Music = MusicLoader.GetMusicSlot(Mod, "Assets/Music/LullabyOfDesertedHell");
             }
         }
 
@@ -182,7 +182,7 @@ namespace DimDream.Content.NPCs
                 StageHelper = 10;
                 NPC.life = 1;
                 NPC.dontTakeDamage = true;
-                NPC.lifeMax = GetRawHealth(16000, 12000, 9500);
+                NPC.lifeMax = GetRawHealth(12000, 9000, 7500);
                 return false;
             }
 

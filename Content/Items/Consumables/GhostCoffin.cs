@@ -39,7 +39,7 @@ namespace DimDream.Content.Items.Consumables
 
         public override bool CanUseItem(Player player)
         {
-            return !NPC.AnyNPCs(ModContent.NPCType<OrinBossCat>());
+            return !NPC.AnyNPCs(ModContent.NPCType<OrinBossHumanoid>());
         }
 
         public override bool? UseItem(Player player)
@@ -48,7 +48,7 @@ namespace DimDream.Content.Items.Consumables
             {
                 SoundEngine.PlaySound(SoundID.Roar, player.position);
 
-                int type = ModContent.NPCType<OrinBossCat>();
+                int type = ModContent.NPCType<OrinBossHumanoid>();
 
                 if (Main.netMode != NetmodeID.MultiplayerClient)
                 {
