@@ -358,8 +358,8 @@ namespace DimDream.Content.NPCs
 
             int arenaRadius = 800; // Actual arena
             int fightRadius = 4000; // How far from the arena center do players have to be in order to be considered out of combat
-            ArenaDust(ArenaCenter, arenaRadius);
-            PullPlayers(ArenaCenter, arenaRadius, fightRadius);
+            BossCommon.ArenaDust(ArenaCenter, arenaRadius);
+            BossCommon.PullPlayers(ArenaCenter, arenaRadius, fightRadius);
         }
 
         public override void FindFrame(int frameHeight)
@@ -458,48 +458,12 @@ namespace DimDream.Content.NPCs
             }
         }
 
-        public void ArenaDust(Vector2 arenaCenter, int arenaRadius)
-        {
-            int dustCount = 5;
-            for (int i = 0; i < dustCount; i++)
-            {
-                float angle = Main.rand.NextFloat(MathHelper.TwoPi);
-                Vector2 position = arenaCenter + new Vector2(0, -arenaRadius).RotatedBy(angle);
-                float speed = 5f;
-                Vector2 velocity = new Vector2(0, -speed).RotatedBy(angle + Pi / 2) * Main.rand.NextFloat(.1f, 1f);
-                int type = DustID.BlueFairy;
-
-                Dust.NewDustPerfect(position, type, velocity, 100, Color.Aqua, 1.5f);
-            }
-        }
-
-
-        public void PullPlayers(Vector2 arenaCenter, int pullDistance, int fightDistance)
-        {
-            float pullStrength = 12f;
-
-            foreach (Player player in Main.player)
-            {
-                float distance = Vector2.Distance(arenaCenter, player.Center);
-                bool isTooDistant = distance > pullDistance && distance < fightDistance;
-                if (player.active && !player.dead && isTooDistant)
-                {
-                    Vector2 directionToArena = arenaCenter - player.Center;
-
-                    directionToArena.Normalize();
-                    directionToArena *= pullStrength;
-
-                    player.velocity = directionToArena;
-                }
-            }
-        }
-
         public void SpawnFairy(Vector2 position, Vector2 velocity)
         {
             int type = ModContent.NPCType<OrinFairy>();
             var entitySource = NPC.GetSource_FromAI();
 
-            NPC npc = NPC.NewNPCDirect(entitySource, (int)position.X, (int)position.Y, type, NPC.whoAmI, 1);
+            NPC npc = NPC.NewNPCDirect(entitySource, (int)position.X, (int)position.Y, type, NPC.whoAmI);
             npc.velocity = new(velocity.X, velocity.Y + 1f);
             npc.damage = NPC.damage;
 
@@ -512,13 +476,13 @@ namespace DimDream.Content.NPCs
             int type = ModContent.NPCType<OrinFairyZombieBalls>();
             var entitySource = NPC.GetSource_FromAI();
 
-            NPC npc = NPC.NewNPCDirect(entitySource, (int)position.X, (int)position.Y, type, NPC.whoAmI, 1);
-            npc.localAI[3] = counter;
-            npc.dontTakeDamage = true;
+            NPC npc = NPC.NewNPCDirect(entitySource, (int)position.X, (int)position.Y, type, NPC.whoAmI, counter);
             npc.damage = NPC.damage;
 
             OrinFairyZombieBalls fairy = (OrinFairyZombieBalls)npc.ModNPC;
             fairy.ParentIndex = NPC.whoAmI;
+
+            npc.netUpdate = true;
         }
 
         public void SpawnExplodingSpirits(Vector2 center, int distance, int spiritCount, int timeLeft)
@@ -538,6 +502,8 @@ namespace DimDream.Content.NPCs
 
                 OrinEvilSpiritExplode s = (OrinEvilSpiritExplode)spirit.ModNPC;
                 s.ParentIndex = NPC.whoAmI;
+
+                spirit.netUpdate = true;
             }
         }
 
@@ -558,6 +524,8 @@ namespace DimDream.Content.NPCs
 
                 OrinEvilSpiritSpiral s = (OrinEvilSpiritSpiral)spirit.ModNPC;
                 s.ParentIndex = NPC.whoAmI;
+
+                spirit.netUpdate = true;
             }
         }
 
@@ -577,9 +545,11 @@ namespace DimDream.Content.NPCs
 
                 OrinEvilSpiritCircleThrust s = (OrinEvilSpiritCircleThrust)spirit.ModNPC;
                 s.ParentIndex = NPC.whoAmI;
+
+                spirit.netUpdate = true;
             }
         }
-        public void SpawnRotatingSpirits(Vector2 center, Vector2 orbitVelocity, int distance, int spiritCount, int timeLeft)
+        public void SpawnRotatingSpirits(Vector2 center, Vector2 orbitVelocity, int distance, int spiritCount)
         {
             for (int i = 0; i < spiritCount; i++)
             {
@@ -590,12 +560,16 @@ namespace DimDream.Content.NPCs
                 var entitySource = NPC.GetSource_FromAI();
                 float speed = distance;
 
-                NPC spirit = NPC.NewNPCDirect(entitySource, position, type, NPC.whoAmI, timeLeft, orbitVelocity.X, orbitVelocity.Y);
+                NPC spirit = NPC.NewNPCDirect(entitySource, position, type, NPC.whoAmI);
+
                 spirit.velocity = velocity * speed;
                 spirit.damage = RawDamage;
 
                 OrinEvilSpiritRotating s = (OrinEvilSpiritRotating)spirit.ModNPC;
                 s.ParentIndex = NPC.whoAmI;
+                s.OrbitVelocity = orbitVelocity;
+
+                spirit.netUpdate = true;
             }
         }
 
@@ -605,8 +579,8 @@ namespace DimDream.Content.NPCs
             int type = ModContent.ProjectileType<Nuke>();
             int damage = ProjDamage;
 
-            Projectile p = Projectile.NewProjectileDirect(entitySource, position, Vector2.Zero, type,damage, 0f, Main.myPlayer, .5f, ai2: NPC.whoAmI);
-            p.timeLeft = timeLeft;
+            Projectile p = Projectile.NewProjectileDirect(entitySource, position, Vector2.Zero, type, damage, 0f, Main.myPlayer, .5f, timeLeft, NPC.whoAmI);
+            p.netUpdate = true;
         }
 
         public void Circle(Vector2 center, float distance, float offset, float speed, int count, int type, float finalSpeed, int frameToSpeedUp = 0, bool cheapKill = false)
@@ -785,7 +759,6 @@ namespace DimDream.Content.NPCs
                 if (Counter == 1)
                     GoToDefaultPosition();
 
-
                 if (Counter < 0)
                     PrePatternDust(500 + Counter * 5);
 
@@ -797,7 +770,8 @@ namespace DimDream.Content.NPCs
                 }
             }
 
-            SkyManager.Instance.Activate("DimDream:BossSky");
+            if (!Main.dedServ)
+                SkyManager.Instance.Activate("DimDream:BossSky");
 
             if (Counter == 60)
                 Casting = true;
@@ -867,7 +841,7 @@ namespace DimDream.Content.NPCs
                 if (Counter == 120)
                 {
                     SpawnSpiralSpirits(player.Center, 240, 8);
-                    SpawnNuke(player.Center, 400 + 100);
+                    SpawnNuke(player.Center, 150);
                 }
 
                 if (Counter == 240)
@@ -877,7 +851,8 @@ namespace DimDream.Content.NPCs
 
             }
 
-            SkyManager.Instance.Activate("DimDream:BossSky");
+            if (!Main.dedServ)
+                SkyManager.Instance.Activate("DimDream:BossSky");
 
             if (Counter >= 100 && Counter <= 210)
                 Casting = true;
@@ -945,7 +920,7 @@ namespace DimDream.Content.NPCs
                         float angle = toPlayerAngle + Pi / 6 * i;
                         float orbitSpeed = 3f;
                         Vector2 orbitVelocity = new(MathF.Sin(angle) * orbitSpeed, -MathF.Cos(angle) * orbitSpeed);
-                        SpawnRotatingSpirits(NPC.Center, orbitVelocity, 100, 5, 500);
+                        SpawnRotatingSpirits(NPC.Center, orbitVelocity, 100, 5);
                     }
                 }
                    
@@ -968,7 +943,8 @@ namespace DimDream.Content.NPCs
                 }
             }
 
-            SkyManager.Instance.Activate("DimDream:BossSky");
+            if (!Main.dedServ)
+                SkyManager.Instance.Activate("DimDream:BossSky");
 
             if (Counter == 1)
                 Casting = true;
@@ -1030,7 +1006,8 @@ namespace DimDream.Content.NPCs
                 }
             }
 
-            SkyManager.Instance.Activate("DimDream:BossSky");
+            if (!Main.dedServ)
+                SkyManager.Instance.Activate("DimDream:BossSky");
 
             if (Counter >= 100)
                 Casting = true;

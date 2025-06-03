@@ -82,9 +82,6 @@ namespace DimDream.Content.NPCs
             NPC.knockBackResist = 0f;
             NPC.netAlways = true;
             NPC.aiStyle = -1;
-
-            float maxSpeed = .2f;
-            NPC.velocity = new(Main.rand.NextFloat(-maxSpeed, maxSpeed), Main.rand.NextFloat(-maxSpeed, maxSpeed));
         }
 
         public override bool CanHitPlayer(Player target, ref int cooldownSlot)
@@ -104,9 +101,8 @@ namespace DimDream.Content.NPCs
             NPC.dontTakeDamage = true;
             NPC.life = 1;
             NPC.velocity = Vector2.Zero;
-            Counter = 0;
+            Counter = 1;
 
-            NPC.netUpdate = true;
             return false;
         }
 
@@ -168,8 +164,11 @@ namespace DimDream.Content.NPCs
 
             Counter++;
 
-            if (Counter == 1 && NPC.dontTakeDamage)
-                NPC.velocity = new(Main.rand.NextFloat(-3f, 3f), Main.rand.NextFloat(-9f, 9f));
+            if (Counter == 2 && NPC.dontTakeDamage && Main.netMode != NetmodeID.MultiplayerClient)
+            {
+                MoveOnDeath();
+                NPC.netUpdate = true;
+            }
             else if (Counter > 60 && NPC.velocity != Vector2.Zero)
             {
                 NPC.velocity *= .95f;
@@ -203,7 +202,6 @@ namespace DimDream.Content.NPCs
                     npc.damage = NPC.damage;
                     OrinFairyZombieSpores fairy = (OrinFairyZombieSpores)npc.ModNPC;
                     fairy.ParentIndex = ParentIndex;
-                    fairy.Counter = -1;
 
                     NPC.active = false;
                     NPC.life = 0;
@@ -220,6 +218,11 @@ namespace DimDream.Content.NPCs
                 }
             }
             return false;
+        }
+
+        public void MoveOnDeath()
+        {
+            NPC.velocity = new(Main.rand.NextFloat(-6f, 6f), Main.rand.NextFloat(-18f, 18f));
         }
 
         public void SpawnDust(Vector2 position)
@@ -259,7 +262,7 @@ namespace DimDream.Content.NPCs
                 return;
 
             Counter++;
-            if (Counter == 0)
+            if (Counter == 1)
             {
                 NPC.dontTakeDamage = true;
                 NPC.life = 2;
@@ -267,10 +270,11 @@ namespace DimDream.Content.NPCs
 
                 NPC.netUpdate = true;
             }
-            else if (Counter == 1 && NPC.life == 1)
+            else if (Counter == 2 && NPC.life == 1 && Main.netMode != NetmodeID.MultiplayerClient)
             {
                 ShootSpores(12, NPC.Center);
-                NPC.velocity = new(Main.rand.NextFloat(-3f, 3f), Main.rand.NextFloat(-9f, 9f));
+                MoveOnDeath();
+                NPC.netUpdate = true;
             }
             else if (Counter >= 60 && Counter % 6 == 0 && NPC.dontTakeDamage)
                 CreateDust();
@@ -299,13 +303,25 @@ namespace DimDream.Content.NPCs
         public override bool Despawn()
         {
             NPC parent = Main.npc[ParentIndex];
+
             if (Main.netMode != NetmodeID.MultiplayerClient &&
-                (!HasParent || parent.localAI[2] > ParentStageHelper || !Main.npc[ParentIndex].active))
+                ((NPC.alpha >= 255 && parent.localAI[2] > ParentStageHelper) ||
+                    !HasParent ||
+                    !Main.npc[ParentIndex].active))
             {
                 NPC.life = 0;
                 NetMessage.SendData(MessageID.SyncNPC, number: NPC.whoAmI);
+
                 return true;
             }
+
+            if (parent.localAI[2] > ParentStageHelper)
+            {
+                NPC.alpha += 15;
+
+                return true;
+            }
+
             return false;
         }
 
@@ -342,6 +358,11 @@ namespace DimDream.Content.NPCs
     
     internal class OrinFairyZombieBalls : OrinFairyZombieSpores
     {
+        public float StartCounter
+        {
+            get => NPC.ai[0];
+            set => NPC.ai[0] = value;
+        }
         public bool IsGonnaThrowDonuts
         {
             get => NPC.localAI[0] > 0;
@@ -359,6 +380,8 @@ namespace DimDream.Content.NPCs
             if (!Initialized)
             {
                 Initialized = true;
+                NPC.dontTakeDamage = true;
+                Counter = StartCounter;
                 ParentStageHelper = (int)Main.npc[ParentIndex].localAI[2];
             }
 
@@ -366,21 +389,32 @@ namespace DimDream.Content.NPCs
                 return;
 
             Counter++;
-            if (Counter == 1 && NPC.life == 1)
-                NPC.velocity = new(Main.rand.NextFloat(-3f, 3f), Main.rand.NextFloat(-9f, 9f));
-            else if (Counter >= 60 && Counter % 6 == 0 && NPC.dontTakeDamage)
+
+            if (Counter == 2 && NPC.life == 1 && Main.netMode != NetmodeID.MultiplayerClient)
+            {
+                MoveOnDeath();
+                NPC.netUpdate = true;
+            } else if (Counter >= 60 && Counter % 6 == 0 && NPC.dontTakeDamage)
+            {
                 CreateDust();
-            else if (Counter >= 180 && NPC.dontTakeDamage)
+            } else if (Counter >= 180 && NPC.dontTakeDamage)
             {
                 Revive();
-                float angle = (player.Center - NPC.Center).Y > 0 ? MathHelper.Pi : 0;
-                ThrowSmallBall(NPC.Center, angle, 4f, 120);
+                if (Main.netMode != NetmodeID.MultiplayerClient)
+                {
+                    float angle = (player.Center - NPC.Center).Y > 0 ? MathHelper.Pi : 0;
+                    ThrowSmallBall(NPC.Center, angle, 4f, 120);
+                }
             } else if (Counter >= 500 && IsGonnaThrowDonuts)
             {
                 Counter = -100;
                 IsGonnaThrowDonuts = false;
-                float offset = Main.rand.NextFloat(MathHelper.TwoPi);
-                ThrowDonuts(NPC.Center, 8, 4f, offset);
+                if (Main.netMode != NetmodeID.MultiplayerClient)
+                {
+                    float offset = Main.rand.NextFloat(MathHelper.TwoPi);
+                    ThrowDonuts(NPC.Center, 8, 4f, offset);
+                    NPC.netUpdate = true;
+                }
             }
 
             if (Counter > 500 && (player.Center - NPC.Center).Length() < 450)
@@ -389,7 +423,7 @@ namespace DimDream.Content.NPCs
                 IsGonnaThrowDonuts = true;
             }
 
-            if (!NPC.dontTakeDamage && !IsGonnaThrowDonuts && Counter > 0)
+            if (!NPC.dontTakeDamage && !IsGonnaThrowDonuts && Counter > 1)
             {
                 Vector2 toPlayer = player.Center - NPC.Center;
                 float angle = toPlayer.SafeNormalize(Vector2.UnitY).ToRotation();

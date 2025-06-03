@@ -232,8 +232,8 @@ namespace DimDream.Content.NPCs
 
             int arenaRadius = 800; // Actual arena
             int fightRadius = 4000; // How far from the arena center do players have to be in order to be considered out of combat
-            ArenaDust(ArenaCenter, arenaRadius);
-            PullPlayers(ArenaCenter, arenaRadius, fightRadius);
+            BossCommon.ArenaDust(ArenaCenter, arenaRadius);
+            BossCommon.PullPlayers(ArenaCenter, arenaRadius, fightRadius);
         }
 
         public override void FindFrame(int frameHeight)
@@ -261,42 +261,6 @@ namespace DimDream.Content.NPCs
                 {
                     NPC.frame.Y = 0;
                     AnimationCount += 1;
-                }
-            }
-        }
-
-
-        public void ArenaDust(Vector2 arenaCenter, int arenaRadius)
-        {
-            int dustCount = 5;
-            for (int i = 0; i < dustCount; i++)
-            {
-                float angle = Main.rand.NextFloat(0, MathHelper.TwoPi);
-                Vector2 position = arenaCenter + new Vector2(0, -arenaRadius).RotatedBy(angle);
-                float speed = 5f;
-                Vector2 velocity = new Vector2(0, -speed).RotatedBy(angle + Pi / 2) * Main.rand.NextFloat(.1f, 1f);
-                int type = DustID.BlueFairy;
-
-                Dust.NewDustPerfect(position, type, velocity, 100, Color.Aqua, 1.5f);
-            }
-        }
-
-        public void PullPlayers(Vector2 arenaCenter, int pullDistance, int fightDistance)
-        {
-            float pullStrength = 12f;
-
-            foreach (Player player in Main.player)
-            {
-                float distance = Vector2.Distance(arenaCenter, player.Center);
-                bool isTooDistant = distance > pullDistance && distance < fightDistance;
-                if (player.active && !player.dead && isTooDistant)
-                {
-                    Vector2 directionToArena = arenaCenter - player.Center;
-
-                    directionToArena.Normalize();
-                    directionToArena *= pullStrength;
-
-                    player.velocity = directionToArena;
                 }
             }
         }

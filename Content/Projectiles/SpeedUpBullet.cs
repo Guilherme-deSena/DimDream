@@ -14,13 +14,15 @@ using DimDream.Content.BossBars;
 using DimDream.Content.NPCs;
 using MonoMod.Core.Utils;
 using System.Diagnostics.Metrics;
+using System.IO;
 
 namespace DimDream.Content.Projectiles
 {
     public class SpeedUpBullet : ModProjectile
     {
         public override string Texture => "DimDream/Content/Projectiles/ErrorTexture";
-        public float MaxSpeed // 1 for speed up, 2 for slow down
+        public virtual int DespawnRange => 1000;
+        public float MaxSpeed
         {
             get => Projectile.ai[0];
             set => Projectile.ai[0] = value;
@@ -117,13 +119,14 @@ namespace DimDream.Content.Projectiles
             }
         }
 
+
         public void Despawn()
         {
             NPC parent = Main.npc[ParentIndex];
             Vector2 arenaCenter = new(parent.localAI[0], parent.localAI[1]);
 
             if (Main.netMode != NetmodeID.MultiplayerClient && Projectile.timeLeft > 20 &&
-                (!HasParent || (parent.dontTakeDamage && parent.localAI[2] >= 1) || (int)parent.localAI[2] != ParentStageHelper || !Main.npc[ParentIndex].active || (arenaCenter - Projectile.Center).Length() > 1000))
+                (!HasParent || (parent.dontTakeDamage && parent.localAI[2] >= 1) || (int)parent.localAI[2] != ParentStageHelper || !Main.npc[ParentIndex].active || (arenaCenter - Projectile.Center).Length() > DespawnRange))
             {                
                 Projectile.timeLeft = 20;
                 NetMessage.SendData(MessageID.SyncProjectile, number: Projectile.whoAmI);
@@ -183,6 +186,7 @@ namespace DimDream.Content.Projectiles
     public class SpeedUpRiceBlue : SpeedUpBullet
     {
         public override string Texture => "DimDream/Content/Projectiles/RiceBlue";
+        public override int DespawnRange => 1200;
         public override void SetDefaults()
         {
             Projectile.width = 10;
@@ -198,6 +202,16 @@ namespace DimDream.Content.Projectiles
             Projectile.netImportant = true;
             Projectile.aiStyle = -1;
             CooldownSlot = ImmunityCooldownID.Bosses; // use the boss immunity cooldown counter, to prevent ignoring boss attacks by taking damage from other sources
+        }
+
+        public override void SendExtraAI(BinaryWriter writer)
+        {
+            writer.Write(Projectile.timeLeft);
+        }
+
+        public override void ReceiveExtraAI(BinaryReader reader)
+        {
+            Projectile.timeLeft = reader.ReadInt32();
         }
     }
 

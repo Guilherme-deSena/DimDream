@@ -21,6 +21,11 @@ namespace DimDream.Content.Projectiles
             get => Projectile.ai[0];
             set => Projectile.ai[0] = value;
         }
+        public int TimeToShowUp
+        {
+            get => (int)Projectile.ai[1];
+            set => Projectile.ai[1] = value;
+        }
         public int ParentIndex
         {
             get => (int)Projectile.ai[2];
@@ -47,7 +52,7 @@ namespace DimDream.Content.Projectiles
             DrawOffsetX = -35;
             DrawOriginOffsetY = -45;
             Projectile.alpha = 255;
-            Projectile.timeLeft = 100;
+            Projectile.timeLeft = 500;
             Projectile.friendly = false;
             Projectile.hostile = false;
             Projectile.tileCollide = false;
@@ -67,7 +72,7 @@ namespace DimDream.Content.Projectiles
         
         public override bool PreDraw(ref Color lightColor)
         {
-            if (Projectile.timeLeft > 150)
+            if (Projectile.timeLeft > TimeToShowUp)
                 return false;
 
             Texture2D texture = TextureAssets.Projectile[Projectile.type].Value;
@@ -92,7 +97,7 @@ namespace DimDream.Content.Projectiles
 
             Despawn();
 
-            if (Projectile.timeLeft > 150)
+            if (Projectile.timeLeft > TimeToShowUp)
             {
                 Projectile.hostile = false;
                 return;

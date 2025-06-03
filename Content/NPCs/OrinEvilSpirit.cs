@@ -14,6 +14,11 @@ namespace DimDream.Content.NPCs
     {
         public override string Texture => "DimDream/Content/NPCs/OrinEvilSpiritRed";
         public bool Initialized { get; set; } = false;
+        public float Counter
+        {
+            get => NPC.localAI[3];
+            set => NPC.localAI[3] = value;
+        }
 
         // This is a neat trick that uses the fact that NPCs have all NPC.ai[] values set to 0f on spawn (if not otherwise changed).
         // We set ParentIndex to a number in the body after spawning it. If we set ParentIndex to 3, NPC.ai[0] will be 4. If NPC.ai[0] is 0, ParentIndex will be -1.
@@ -21,10 +26,13 @@ namespace DimDream.Content.NPCs
         // between a proper spawn and an invalid/"cheated" spawn
         public int ParentIndex
         {
-            get => (int)NPC.ai[3] - 1;
-            set => NPC.ai[3] = value + 1;
+            get => (int)NPC.localAI[2] - 1;
+            set => NPC.localAI[2] = value + 1;
         }
 
+
+        public bool HasParent => ParentIndex > -1;
+        public int ParentStageHelper { get; set; }
         public virtual int ProjDamage
         {
             get
@@ -39,14 +47,6 @@ namespace DimDream.Content.NPCs
             }
         }
 
-        public bool HasParent => ParentIndex > -1;
-        public int ParentStageHelper { get; set; }
-
-        public float Counter
-        {
-            get => NPC.localAI[3];
-            set => NPC.localAI[3] = value;
-        }
 
         public override void SetStaticDefaults()
         {
@@ -82,9 +82,6 @@ namespace DimDream.Content.NPCs
             NPC.knockBackResist = 0f;
             NPC.netAlways = true;
             NPC.aiStyle = -1;
-
-            float maxSpeed = .2f;
-            NPC.velocity = new(Main.rand.NextFloat(-maxSpeed, maxSpeed), Main.rand.NextFloat(-maxSpeed, maxSpeed));
         }
 
 
@@ -147,14 +144,16 @@ namespace DimDream.Content.NPCs
 
         public bool Despawn()
         {
-            NPC parent = Main.npc[ParentIndex];
-            if (Main.netMode != NetmodeID.MultiplayerClient &&
-                (!HasParent || (int)parent.localAI[2] != ParentStageHelper || !Main.npc[ParentIndex].active))
+            if (Main.netMode != NetmodeID.MultiplayerClient)
             {
-                NPC.active = false;
-                NPC.life = 0;
-                NetMessage.SendData(MessageID.SyncNPC, number: NPC.whoAmI);
-                return true;
+                NPC parent = Main.npc[ParentIndex];
+                if (!HasParent || (int)parent.localAI[2] != ParentStageHelper || !Main.npc[ParentIndex].active)
+                {
+                    NPC.active = false;
+                    NPC.life = 0;
+                    NetMessage.SendData(MessageID.SyncNPC, number: NPC.whoAmI);
+                    return true;
+                }
             }
             return false;
         }
@@ -185,12 +184,13 @@ namespace DimDream.Content.NPCs
 
             player = Main.player[NPC.target];
 
-            if (!Initialized)
+            if (!Initialized && Main.netMode != NetmodeID.MultiplayerClient)
             {
                 Initialized = true;
                 ParentStageHelper = (int)Main.npc[ParentIndex].localAI[2];
                 float maxSpeed = .2f;
                 NPC.velocity = new(Main.rand.NextFloat(-maxSpeed, maxSpeed), Main.rand.NextFloat(-maxSpeed, maxSpeed));
+                NPC.netUpdate = true;
             }
 
             if (Despawn())
@@ -200,7 +200,7 @@ namespace DimDream.Content.NPCs
                 CreateDust();
 
 
-            if (Counter % 60 == 0)
+            if (Counter % 60 == 0 && Main.netMode != NetmodeID.MultiplayerClient)
             {
                 Vector2 toDestination = player.Center - NPC.Center;
                 float offset = toDestination.SafeNormalize(Vector2.UnitY).ToRotation() + Main.rand.NextFloat(-MathHelper.Pi / 40, MathHelper.Pi / 40);
@@ -241,7 +241,7 @@ namespace DimDream.Content.NPCs
 
             player = Main.player[NPC.target];
 
-            if (!Initialized)
+            if (!Initialized && Main.netMode != NetmodeID.MultiplayerClient)
             {
                 Initialized = true;
                 ParentStageHelper = (int)Main.npc[ParentIndex].localAI[2];
@@ -260,7 +260,7 @@ namespace DimDream.Content.NPCs
             if (Counter % 6 == 0)
                 CreateDust();
 
-            if (Counter % 30 == 0)
+            if (Counter % 30 == 0 && Main.netMode != NetmodeID.MultiplayerClient)
             {
                 float offset = NPC.velocity.SafeNormalize(Vector2.UnitY).ToRotation() - MathHelper.Pi / 14;
                 Circle(NPC.Center, 20, offset, 1f, 7, ModContent.ProjectileType<SpeedUpLargeBallBlue>(), 0);
@@ -310,7 +310,7 @@ namespace DimDream.Content.NPCs
 
             player = Main.player[NPC.target];
 
-            if (!Initialized)
+            if (!Initialized && Main.netMode != NetmodeID.MultiplayerClient)
             {
                 Initialized = true;
                 ParentStageHelper = (int)Main.npc[ParentIndex].localAI[2];
@@ -378,7 +378,7 @@ namespace DimDream.Content.NPCs
             player = Main.player[NPC.target];
 
 
-            if (!Initialized)
+            if (!Initialized && Main.netMode != NetmodeID.MultiplayerClient)
             {
                 Initialized = true;
                 ParentStageHelper = (int)Main.npc[ParentIndex].localAI[2];
@@ -423,21 +423,21 @@ namespace DimDream.Content.NPCs
 
     internal class OrinEvilSpiritSpiral : OrinEvilSpirit
     {
-        public float OrbitOffset
-        {
-            get => NPC.localAI[0];
-            set => NPC.localAI[0] = value;
-        }
-
         public Vector2 OrbitCenter
         {
-            get => new(NPC.localAI[1], NPC.localAI[2]);
+            get => new(NPC.ai[0], NPC.ai[1]);
             set
             {
-                NPC.localAI[1] = value.X;
-                NPC.localAI[2] = value.Y;
+                NPC.ai[0] = value.X;
+                NPC.ai[1] = value.Y;
             }
         }
+        public float OrbitOffset
+        {
+            get => NPC.ai[2];
+            set => NPC.ai[2] = value;
+        }
+
 
         public override int ProjDamage
         {
@@ -455,7 +455,7 @@ namespace DimDream.Content.NPCs
 
         public override void AI()
         {
-            if (!Initialized)
+            if (!Initialized && Main.netMode != NetmodeID.MultiplayerClient)
             {
                 Initialized = true;
                 ParentStageHelper = (int)Main.npc[ParentIndex].localAI[2];
@@ -513,8 +513,9 @@ namespace DimDream.Content.NPCs
 
             var entitySource = NPC.GetSource_FromAI();
             int type = ModContent.ProjectileType<SpeedUpRiceBlue>();
-            Projectile p = Projectile.NewProjectileDirect(entitySource, position, direction * speed, type, ProjDamage, 0f, Main.myPlayer, maxSpeed, frameToSpeedUp, ai2: ParentIndex);
-            p.timeLeft = 700;
+            Projectile p = Projectile.NewProjectileDirect(entitySource, position, direction * speed, type, ProjDamage, 0f, Main.myPlayer, maxSpeed, frameToSpeedUp, ParentIndex);
+            p.timeLeft = 900; // Remember to send timeLeft through extra AI in the projectile code (timeleft doesn't sync by default)!!
+            NetMessage.SendData(MessageID.SyncProjectile, number: p.whoAmI);
         }
     }
 
@@ -522,18 +523,13 @@ namespace DimDream.Content.NPCs
     {
         public override string Texture => "DimDream/Content/NPCs/OrinEvilSpiritBlue";
 
-        public int FrameToExplode
-        {
-            get => (int)NPC.ai[0];
-        }
-
         public Vector2 OrbitVelocity
         {
-            get => new(NPC.ai[1], NPC.ai[2]);
+            get => new(NPC.ai[2], NPC.ai[3]);
             set 
             {
-                NPC.ai[1] = value.X;
-                NPC.ai[2] = value.Y;
+                NPC.ai[2] = value.X;
+                NPC.ai[3] = value.Y;
             }
         }
 
@@ -541,7 +537,7 @@ namespace DimDream.Content.NPCs
         {
             NPC.dontTakeDamage = true;
 
-            if (!Initialized)
+            if (!Initialized && Main.netMode != NetmodeID.MultiplayerClient)
             {
                 Initialized = true;
                 ParentStageHelper = (int)Main.npc[ParentIndex].localAI[2];
@@ -565,13 +561,6 @@ namespace DimDream.Content.NPCs
             Vector2 rotationMovement = offset.RotatedBy(rotationSpeed);
 
             NPC.velocity = rotationMovement - offset + OrbitVelocity;
-
-            if (Main.netMode != NetmodeID.MultiplayerClient && Counter >= FrameToExplode)
-            {
-                NPC.active = false;
-                NPC.life = 0;
-                NetMessage.SendData(MessageID.SyncNPC, number: NPC.whoAmI);
-            }
         }
     }
 }
