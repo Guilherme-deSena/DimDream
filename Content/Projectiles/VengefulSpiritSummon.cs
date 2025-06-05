@@ -236,7 +236,7 @@ namespace DimDream.Content.Projectiles
 
         private void Attack(bool foundTarget, float distanceFromTarget, Vector2 targetCenter)
         {
-            if (Main.netMode != NetmodeID.MultiplayerClient && foundTarget && distanceFromTarget < 1400f && Counter % 40 == 0)
+            if (Main.myPlayer == Projectile.owner && foundTarget && distanceFromTarget < 1400f && Counter % 40 == 0)
             {
                 Vector2 direction = targetCenter - Projectile.Center;
                 Vector2 directionNormalized = direction.SafeNormalize(Vector2.UnitY);

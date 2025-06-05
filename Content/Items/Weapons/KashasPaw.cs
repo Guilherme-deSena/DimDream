@@ -1,5 +1,6 @@
 ﻿using DimDream.Content.Projectiles;
 using Microsoft.Xna.Framework;
+using System.Net.Mail;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ID;
@@ -14,7 +15,7 @@ namespace DimDream.Content.Items.Weapons
             Item.useStyle = ItemUseStyleID.Swing;
             Item.useAnimation = 12;
             Item.useTime = 12;
-            Item.damage = 82;
+            Item.damage = 120;
             Item.crit = 4;
             Item.knockBack = 10f;
             Item.shootSpeed = 8f;
@@ -31,7 +32,7 @@ namespace DimDream.Content.Items.Weapons
 
         public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
         {
-            if (Main.rand.Next(100) <= (player.GetCritChance(DamageClass.Melee) + Item.crit))
+            if (Main.rand.Next(100) <= (player.GetCritChance(DamageClass.Melee) + player.GetCritChance(DamageClass.Generic) + Item.crit))
                 return true;
 
             return false;

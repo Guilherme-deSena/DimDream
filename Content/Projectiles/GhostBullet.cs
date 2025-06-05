@@ -57,16 +57,15 @@ namespace DimDream.Content.Projectiles
 
         public override void AI()
         {
-            if (!Initialized)
+            if (!Initialized && Main.netMode != NetmodeID.MultiplayerClient)
             {
                 Initialized = true;
-                if (Main.netMode != NetmodeID.MultiplayerClient)
-                {
-                    Projectile.velocity *= Main.rand.NextFloat(.5f, 2f);
-                    FrameToMove = Main.rand.Next(10, 50);
-                    Projectile.velocity.RotateRandom(.6f);
-                    DynamicRotation = Main.rand.NextFloat(-.4f, .4f);
-                }
+                Projectile.velocity *= Main.rand.NextFloat(.5f, 2f);
+                FrameToMove = Main.rand.Next(10, 50);
+                Projectile.velocity.RotateRandom(.6f);
+                DynamicRotation = Main.rand.NextFloat(-.4f, .4f);
+
+                NetMessage.SendData(MessageID.SyncProjectile, number: Projectile.whoAmI);
             }
 
             Movement();

@@ -31,7 +31,7 @@ namespace DimDream.Content.Items.Weapons
             Item.noUseGraphic = true; // Makes the item invisible while using it (the projectile is the visible part).
             Item.UseSound = SoundID.Item1;
 
-            Item.damage = 15;
+            Item.damage = 20;
             Item.DamageType = DamageClass.MeleeNoSpeed;
             Item.knockBack = 2.5f;
             Item.crit = 8;

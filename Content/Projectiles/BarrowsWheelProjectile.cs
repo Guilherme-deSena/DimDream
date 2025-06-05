@@ -52,7 +52,7 @@ namespace DimDream.Content.Projectiles
 
         public override void PostAI()
         {
-            if (Main.netMode != NetmodeID.MultiplayerClient)
+            if (Main.myPlayer == Projectile.owner)
             {
                 Counter++;
 
@@ -71,10 +71,10 @@ namespace DimDream.Content.Projectiles
             Vector2 velocity = new Vector2(0, -1).RotatedBy(angle);
 
             float speed = Main.rand.NextFloat(3f, 5f);
-            var entitySource = Projectile.GetSource_FromAI();
+            var entitySource = Projectile.GetSource_FromThis();
             int type = ModContent.ProjectileType<BasicSpiralBulletFriendly>();
 
-            Projectile.NewProjectile(entitySource, position, velocity * speed, type, Projectile.damage / 2, Projectile.knockBack / 2, Projectile.owner);
+            Projectile.NewProjectile(entitySource, position, velocity * speed, type, Projectile.damage / 2, Projectile.knockBack / 2, Main.myPlayer);
         }
     }
 }

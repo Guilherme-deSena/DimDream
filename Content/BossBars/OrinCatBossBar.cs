@@ -8,6 +8,7 @@ using ReLogic.Graphics;
 using Terraria.GameContent;
 using Terraria.GameContent.UI.BigProgressBar;
 using System.Collections;
+using DimDream.Content.NPCs;
 namespace DimDream.Content.BossBars
 {
     public class OrinCatBossBar : ModBossBar
@@ -78,10 +79,10 @@ namespace DimDream.Content.BossBars
         {
             if (currentHealthBar == 1)
             {
-                Vector2 finalPosition = new(healthStart.X + healthWidth * .8f, healthStart.Y);
+                Vector2 finalPosition = new(healthStart.X + healthWidth * OrinBossCat.StageHealthPercentages[0], healthStart.Y);
                 spriteBatch.Draw(SegmentSeparator.Value, finalPosition, Color.White);
 
-                finalPosition.X = healthStart.X + healthWidth * .5f;
+                finalPosition.X = healthStart.X + healthWidth * OrinBossCat.StageHealthPercentages[1];
                 spriteBatch.Draw(SegmentSeparator.Value, finalPosition, Color.White);
             }
         }
@@ -99,17 +100,17 @@ namespace DimDream.Content.BossBars
             switch (currentHealthBar)
             {
                 case 0:
-                    finalPosition = new(healthStart.X + healthWidth * .6f, healthStart.Y);
+                    finalPosition = new(healthStart.X + healthWidth * OrinBossHumanoid.stageHealthPercentages[0], healthStart.Y);
                     spriteBatch.Draw(SegmentSeparator.Value, finalPosition, Color.White);
                     break;
 
                 case 1:
-                    finalPosition = new(healthStart.X + healthWidth * .6f, healthStart.Y);
+                    finalPosition = new(healthStart.X + healthWidth * OrinBossHumanoid.stageHealthPercentages[1], healthStart.Y);
                     spriteBatch.Draw(SegmentSeparator.Value, finalPosition, Color.White);
                     break;
 
                 case 2:
-                    finalPosition = new(healthStart.X + healthWidth * .55f, healthStart.Y);
+                    finalPosition = new(healthStart.X + healthWidth * OrinBossHumanoid.stageHealthPercentages[2], healthStart.Y);
                     spriteBatch.Draw(SegmentSeparator.Value, finalPosition, Color.White);
                     break;
             }

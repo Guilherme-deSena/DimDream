@@ -15,15 +15,15 @@ namespace DimDream.Content.Items.Weapons
             Item.width = 60;
             Item.height = 20;
 
-            Item.shootSpeed = 4f;
+            Item.shootSpeed = 6f;
             Item.noMelee = true;
-            Item.useTime = 10;
-            Item.useAnimation = 10;
+            Item.useTime = 8;
+            Item.useAnimation = 8;
             Item.useStyle = ItemUseStyleID.Shoot;
             Item.autoReuse = true;
             Item.DamageType = DamageClass.Ranged;
 
-            Item.SetWeaponValues(84, 3);
+            Item.SetWeaponValues(140, 3);
             Item.SetShopValues(ItemRarityColor.Orange3, 120000);
 
             Item.UseSound = SoundID.Item40;

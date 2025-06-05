@@ -250,7 +250,7 @@ namespace DimDream.Content.Projectiles
 
         private void Attack(bool foundTarget, float distanceFromTarget, Vector2 targetCenter)
         {
-            if (Main.netMode != NetmodeID.MultiplayerClient && Counter == -80 && foundTarget && distanceFromTarget < 1400f)
+            if (Main.myPlayer == Projectile.owner && Counter == -80 && foundTarget && distanceFromTarget < 1400f)
             {
                 Vector2 direction = targetCenter - Projectile.Center;
                 ShootDonuts(Projectile.Center, 6f, direction.ToRotation(), 8);

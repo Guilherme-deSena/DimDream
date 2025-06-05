@@ -40,7 +40,7 @@ namespace DimDream.Common.Players
             if (countdown == 0)
                 foreach (Player otherPlayer in Main.player)
                 {
-                    if (otherPlayer != null && otherPlayer.active && otherPlayer.whoAmI != Player.whoAmI && otherPlayer.team == Player.team && otherPlayer.GetModPlayer<RevivalPlayer>().HasRevivalAccessory)
+                    if (otherPlayer != null && otherPlayer.active && otherPlayer.whoAmI != Player.whoAmI && Player.team != 0 && otherPlayer.team == Player.team && otherPlayer.GetModPlayer<RevivalPlayer>().HasRevivalAccessory)
                     {
                         // Move the respawning player to the accessory holder's position
                         Player.Teleport(otherPlayer.position, 1);

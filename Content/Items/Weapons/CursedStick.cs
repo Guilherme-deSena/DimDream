@@ -20,8 +20,8 @@ namespace DimDream.Content.Items.Weapons
     {
         public override void SetDefaults()
         {
-            Item.DefaultToStaff(ModContent.ProjectileType<VengefulSpiritSpin>(), 14, 45, 18);
-            Item.SetWeaponValues(72, 2);
+            Item.DefaultToStaff(ModContent.ProjectileType<VengefulSpiritSpin>(), 14, 25, 16);
+            Item.SetWeaponValues(100, 2);
             Item.SetShopValues(ItemRarityColor.Green2, 70000);
             Item.width = 38;
             Item.height = 34;
@@ -36,7 +36,7 @@ namespace DimDream.Content.Items.Weapons
             Vector2 toTargetNormalized = (target - position).SafeNormalize(Vector2.UnitY);
             float speed = 10f;
 
-            SpawnRotatingSpirits(player.MountedCenter, toTargetNormalized * speed, 80, 5, type, player, source, damage, knockback);
+            SpawnRotatingSpirits(player.MountedCenter, toTargetNormalized * speed, 70, 5, type, player, source, damage, knockback);
             NetMessage.SendData(MessageID.PlayerControls, -1, -1, null, player.whoAmI); // Sync the changes in multiplayer.
             return false;
         }

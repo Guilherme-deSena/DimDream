@@ -24,7 +24,7 @@ namespace DimDream.Content.Items.Weapons
 
         public override void SetDefaults()
         {
-            Item.SetWeaponValues(140, 1);
+            Item.SetWeaponValues(130, 1);
             Item.mana = 12;
             Item.width = 40;
             Item.height = 40;

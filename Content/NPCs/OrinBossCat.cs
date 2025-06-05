@@ -26,6 +26,8 @@ namespace DimDream.Content.NPCs
     [AutoloadBossHead] // This attribute looks for a texture called "ClassName_Head_Boss" and automatically registers it as the NPC boss head icon
     internal class OrinBossCat : ModNPC
     {
+        // Store the health percentage at which the boss changes stages in this array. This is also checked in the boss bar.
+        public static float[] StageHealthPercentages = [.7f, .35f];
         public bool Initialized { get; set; } = false;
         public int Inverter { get; set; } = 1;
         public Vector2 ArenaCenter
@@ -58,10 +60,10 @@ namespace DimDream.Content.NPCs
                 if (StageHelper <= 1)
                     return 1;
 
-                if (NPC.life > NPC.lifeMax * .7f)
+                if (NPC.life > NPC.lifeMax * StageHealthPercentages[0])
                     return 2;
 
-                if (NPC.life > NPC.lifeMax * .35f)
+                if (NPC.life > NPC.lifeMax * StageHealthPercentages[1])
                     return 3;
 
                 return 4;
@@ -109,7 +111,7 @@ namespace DimDream.Content.NPCs
         {
             NPC.width = 92;
             NPC.height = 78;
-            NPC.damage = 18;
+            NPC.damage = 23;
             NPC.defense = 22;
             NPC.lifeMax = GetRawHealth(2000, 1500, 1300);
             NPC.HitSound = SoundID.NPCHit1;
@@ -186,7 +188,6 @@ namespace DimDream.Content.NPCs
                 return false;
             }
 
-            SkyManager.Instance.Deactivate("DimDream:BossSky");
             return true;
         }
 
@@ -629,7 +630,7 @@ namespace DimDream.Content.NPCs
                 if (Counter <= 1)
                     GoToDefaultPosition();
 
-                if (Counter % 60 == 0 && Counter <= 420)
+                if ( Counter > 1 && Counter % 60 == 0 && Counter <= 420)
                 {
                     AlternatingJump(Inverter);
                     if (Counter % 120 == 60)

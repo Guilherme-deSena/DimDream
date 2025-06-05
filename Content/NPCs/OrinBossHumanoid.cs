@@ -25,11 +25,12 @@ namespace DimDream.Content.NPCs
     [AutoloadBossHead] // This attribute looks for a texture called "ClassName_Head_Boss" and automatically registers it as the NPC boss head icon
     internal class OrinBossHumanoid : ModNPC
     {
+        // Store in this array the health percentage at which the boss changes stages. This is also checked in the boss bar.
+        public static float[] stageHealthPercentages = [.6f, .6f, .55f];
         public int AnimationCount { get; set; } = 0;
         public bool Casting { get; set; } = false;
         public int AnimationDirection { get; set; } = 1;
         public bool Initialized { get; set; } = false;
-        public int Inverter { get; set; } = 1;
         public Vector2 ArenaCenter {
             get => new(NPC.localAI[0], NPC.localAI[1]);
             set
@@ -53,19 +54,19 @@ namespace DimDream.Content.NPCs
         {
             get
             {
-                if (StageHelper < 9 && NPC.life > NPC.lifeMax * .6f)
+                if (StageHelper < 9 && NPC.life > NPC.lifeMax * stageHealthPercentages[0])
                     return 0;
 
                 if (StageHelper < 9)
                     return 1;
 
-                if (StageHelper < 19 && NPC.life > NPC.lifeMax * .6f)
+                if (StageHelper < 19 && NPC.life > NPC.lifeMax * stageHealthPercentages[1])
                     return 2;
 
                 if (StageHelper < 19)
                     return 3;
 
-                if (StageHelper < 29 && NPC.life > NPC.lifeMax * .55f)
+                if (StageHelper < 29 && NPC.life > NPC.lifeMax * stageHealthPercentages[2])
                     return 4;
 
                 if (StageHelper < 29)
