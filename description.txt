@@ -1,8 +1,17 @@
 Dimensional Dream is a boss-focused mod that adds characters and patterns from the Touhou Project series. All characters belong to Team Shanghai Alice.
 This mod is current in alpha. Bugs will happen, so please report any you come across.
 
+To summon Orin, use 5 rotten chunks, 10 purification powder, 10 wood and a tombstone.
 To summon Chiyuri, use 10 palladium or cobalt bars and 5 souls of light in an anvil to craft her summon item.
-To summon Yumemi, craft a pocket collider with 10 meteorite bars, 5 souls of sight and 3 fallen stars.
+To summon Yumemi, use 10 meteorite bars, 5 souls of sight and 3 fallen stars.
+To summon Rin Kaenbyou, use 5 ectoplasm, 10 purification powder, 10 wood and a tombstone.
+
+VERSION v0.3.0:
+-- Rebalanced previous bosses.
+-- Added an arena system for all bosses. Players that try to get away will be pulled towards it. Players that are too far away (considered not in combat) will not be pulled.
+-- Added Orin (pre-hardmode boss).
+-- Added Rin Kaenbyou (post-plantera boss).
+-- Added 7 drops between the two bosses.
 
 VERSION v0.2.1:
 -- Miniature Hypervessel no longer needs hallowed bars to be crafted, and thus, Chiyuri can be spawned earlier in Hardmode.
@@ -18,8 +27,5 @@ VERSION v0.1.0:
 -- Initial alpha release.
 -- Added the boss Chiyuri Kitashiragawa and her summon item, Miniature Hypervessel.
 
-
-Yumemi video demonstration: https://youtu.be/i5-ngYmsh5o
-Chiyuri video demonstration: https://youtu.be/ReGCMN8MkTY?si=XU224SE--BEvbwXj
 
 Source code: https://github.com/Guilherme-deSena/DimDream
