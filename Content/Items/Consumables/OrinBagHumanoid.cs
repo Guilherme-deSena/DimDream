@@ -40,7 +40,6 @@ namespace DimDream.Content.Items.Consumables
         public override void ModifyItemLoot(ItemLoot itemLoot)
         {
             itemLoot.Add(ItemDropRule.OneFromOptions(1, [ModContent.ItemType<Phantasmagoria>(), ModContent.ItemType<ZombieFairyStaff>(), ModContent.ItemType<KashasPaw>(), ModContent.ItemType<CursedStick>()]));
-            itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<OrinsCartEnabled>(), 4));
             itemLoot.Add(ItemDropRule.CoinsBasedOnNPCValue(ModContent.NPCType<OrinBossHumanoid>()));
         }
     }

@@ -272,7 +272,7 @@ namespace DimDream.Content.NPCs
             }
             else if (Counter == 2 && NPC.life == 1 && Main.netMode != NetmodeID.MultiplayerClient)
             {
-                ShootSpores(12, NPC.Center);
+                ShootSpores(6, NPC.Center);
                 MoveOnDeath();
                 NPC.netUpdate = true;
             }
@@ -347,7 +347,7 @@ namespace DimDream.Content.NPCs
             for (int i = 0; i < sporeCount; i++)
             {
                 Vector2 velocity = new Vector2(1, 0).RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
-                float speed = Main.rand.NextFloat(1.5f, 3f);
+                float speed = Main.rand.NextFloat(2.5f, 5f);
                 var entitySource = NPC.GetSource_FromAI();
                 int type = ModContent.ProjectileType<BasicWhiteSpore>();
 

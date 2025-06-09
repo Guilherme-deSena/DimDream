@@ -14,11 +14,19 @@ Mods: {
 			OrinBossCat: {
 				DisplayName: Orin
 				SpawnInfo: Use um [i:DimDream/CorpseCoffin] em qualquer lugar.
+				Spells.CatsWalk: Símbolo do Gato "Caminhar do Gato"
 			}
 
 			OrinBossHumanoid: {
 				DisplayName: Rin Kaenbyou
 				SpawnInfo: Use um [i:DimDream/GhostCoffin] em qualquer lugar.
+
+				Spells: {
+					ZombieFairy: Ninfa Amaldiçoada "Fada Zumbi"
+					SpleenEater: Espírito Malicioso "Comedor de Baço"
+					NeedleMountain: Expiação "Montanha de Agulhas do Inferno Antigo"
+					DeadAshes: Reignição de Cinzas Extinguidas
+				}
 			}
 
 			EvilSpirit.DisplayName: Espírito Mal

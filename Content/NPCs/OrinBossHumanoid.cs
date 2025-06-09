@@ -19,6 +19,7 @@ using DimDream.Content.BossBars;
 using Microsoft.CodeAnalysis.Text;
 using Terraria.ModLoader.Default;
 using Terraria.Graphics.Effects;
+using Terraria.Localization;
 
 namespace DimDream.Content.NPCs
 {
@@ -26,7 +27,7 @@ namespace DimDream.Content.NPCs
     internal class OrinBossHumanoid : ModNPC
     {
         // Store in this array the health percentage at which the boss changes stages. This is also checked in the boss bar.
-        public static float[] stageHealthPercentages = [.6f, .6f, .55f];
+        public static float[] stageHealthPercentages = [.6f, .6f, .65f];
         public int AnimationCount { get; set; } = 0;
         public bool Casting { get; set; } = false;
         public int AnimationDirection { get; set; } = 1;
@@ -138,7 +139,7 @@ namespace DimDream.Content.NPCs
             NPC.height = 78;
             NPC.damage = 48;
             NPC.defense = 22;
-            NPC.lifeMax = GetRawHealth(45000, 30000, 27000);
+            NPC.lifeMax = BossCommon.GetRawHealth(32000, 20000, 16000);
             NPC.HitSound = SoundID.NPCHit1;
             NPC.DeathSound = SoundID.NPCDeath1;
             NPC.knockBackResist = 0f;
@@ -207,15 +208,15 @@ namespace DimDream.Content.NPCs
             if (StageHelper < 9)
             {
                 StageHelper = 9;
-                NPC.lifeMax = GetRawHealth(36000, 50000, 64000);
+                NPC.lifeMax = BossCommon.GetRawHealth(36000, 50000, 64000);
             } else if (StageHelper < 19)
             {
                 StageHelper = 19;
-                NPC.lifeMax = GetRawHealth(48000, 65000, 80000);
+                NPC.lifeMax = BossCommon.GetRawHealth(36000, 50000, 64000);
             } else if (StageHelper < 29)
             {
                 StageHelper = 29;
-                NPC.lifeMax = GetRawHealth(35000, 48000, 60000);
+                NPC.lifeMax = BossCommon.GetRawHealth(35000, 48000, 60000);
             }
 
             if (StageHelper < 30)
@@ -236,23 +237,27 @@ namespace DimDream.Content.NPCs
             if (StageHelper == 1)
             {
                 int timeFactor = !ShouldMoveSpellName ? 999 : Counter + 50;
+                string spellName = Language.GetTextValue("Mods.DimDream.NPCs.OrinBossHumanoid.Spells.ZombieFairy");
                 DrawNPC(spriteBatch, timeFactor);
-                DrawSpellName(spriteBatch, "Cursed Sprite \"Zombie Fairy\"", timeFactor);
+                DrawSpellName(spriteBatch, spellName, timeFactor);
             } else if (StageHelper == 11)
             {
                 int timeFactor = !ShouldMoveSpellName ? 999 : Counter;
+                string spellName = Language.GetTextValue("Mods.DimDream.NPCs.OrinBossHumanoid.Spells.SpleenEater");
                 DrawNPC(spriteBatch, timeFactor);
-                DrawSpellName(spriteBatch, "Malicious Spirit \"Spleen Eater\"", timeFactor);
+                DrawSpellName(spriteBatch, spellName, timeFactor);
             } else if (StageHelper == 21)
             {
                 int timeFactor = !ShouldMoveSpellName ? 999 : Counter;
+                string spellName = Language.GetTextValue("Mods.DimDream.NPCs.OrinBossHumanoid.Spells.NeedleMountain");
                 DrawNPC(spriteBatch, timeFactor);
-                DrawSpellName(spriteBatch, "Atonement \"Former Hell's Needle Mountain\"", timeFactor);
+                DrawSpellName(spriteBatch, spellName, timeFactor);
             } else if (StageHelper == 30)
             {
                 int timeFactor = !ShouldMoveSpellName ? 999 : Counter + 250;
+                string spellName = Language.GetTextValue("Mods.DimDream.NPCs.OrinBossHumanoid.Spells.DeadAshes");
                 DrawNPC(spriteBatch, timeFactor);
-                DrawSpellName(spriteBatch, "\"Rekindling of Dead Ashes\"", timeFactor);
+                DrawSpellName(spriteBatch, spellName, timeFactor);
             }
             return true;
         }
@@ -430,17 +435,6 @@ namespace DimDream.Content.NPCs
                     }
                 }
             }
-        }
-
-        public int GetRawHealth(int classic, int expert, int master)
-        {
-            if (Main.masterMode)
-                return master;
-
-            if (Main.expertMode)
-                return expert;
-
-            return classic;
         }
 
         public void PrePatternDust(int distance, float offset = 0)
@@ -919,24 +913,24 @@ namespace DimDream.Content.NPCs
                     {
                         float toPlayerAngle = (player.Center - NPC.Center).ToRotation() + MathHelper.PiOver2;
                         float angle = toPlayerAngle + Pi / 6 * i;
-                        float orbitSpeed = 3f;
+                        float orbitSpeed = 4f;
                         Vector2 orbitVelocity = new(MathF.Sin(angle) * orbitSpeed, -MathF.Cos(angle) * orbitSpeed);
-                        SpawnRotatingSpirits(NPC.Center, orbitVelocity, 100, 5);
+                        SpawnRotatingSpirits(NPC.Center, orbitVelocity, 130, 5);
                     }
                 }
                    
-                if (Counter >= 200 && Counter <= 270 && Counter % 5 == 0)
+                if (Counter >= 200 && Counter <= 300 && Counter % 5 == 0)
                 {
                     int start = Counter - 200;
-                    float angle = start * Pi / 160;
+                    float angle = start * Pi / 180;
                     float distance = 40 + start * 8;
                     int frameToSpeedUp = 180 - start * 2;
 
                     Circle(CastingPosition, distance, angle, .01f, 14, ModContent.ProjectileType<SpeedUpDiamondBlue>(), 5f, frameToSpeedUp, false);
-                } else if (Counter >= 300 && Counter <= 370 && Counter % 5 == 0)
+                } else if (Counter >= 300 && Counter <= 400 && Counter % 5 == 0)
                 {
                     int start = Counter - 300;
-                    float angle = start * -Pi / 160;
+                    float angle = start * -Pi / 180;
                     float distance = 40 + start * 8;
                     int frameToSpeedUp = 180 - start * 2;
 
@@ -957,7 +951,7 @@ namespace DimDream.Content.NPCs
                 ShouldMoveSpellName = true;
             }
 
-            if (Counter >= 400)
+            if (Counter >= 450)
             {
                 Counter = 0;
                 ShouldMoveSpellName = false;

@@ -14,11 +14,19 @@ Mods: {
 			OrinBossCat: {
 				DisplayName: Orin
 				SpawnInfo: Use a [i:DimDream/CorpseCoffin] at any time or place.
+				Spells.CatsWalk: Cat Sign "Cat's Walk"
 			}
 
 			OrinBossHumanoid: {
 				DisplayName: Rin Kaenbyou
 				SpawnInfo: Use a [i:DimDream/GhostCoffin] at any time or place.
+
+				Spells: {
+					ZombieFairy: Cursed Sprite "Zombie Fairy"
+					SpleenEater: Malicious Spirit "Spleen Eater"
+					NeedleMountain: Atonement "Former Hell's Needle Mountain"
+					DeadAshes: Rekindling of Dead Ashes
+				}
 			}
 
 			EvilSpirit.DisplayName: Evil Spirit

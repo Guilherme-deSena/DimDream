@@ -11,6 +11,20 @@ namespace DimDream.Content.NPCs
 {
     public static class BossCommon
     {
+
+        // Return health before changes from difficulty (setting health in SetDefaults will result in different values depending on difficulty,
+        // but setting in CheckDead will not, so using this method in SetDefaults will have to account for how tmodloader multiplies health).
+        public static int GetRawHealth(int classic, int expert, int master)
+        {
+            if (Main.masterMode)
+                return master;
+
+            if (Main.expertMode)
+                return expert;
+
+            return classic;
+        }
+
         public static void ArenaDust(Vector2 arenaCenter, int arenaRadius)
         {
             int dustCount = 5;

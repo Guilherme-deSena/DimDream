@@ -20,6 +20,7 @@ using DimDream.Content.BossBars;
 using Microsoft.CodeAnalysis.Text;
 using DimDream.Common.Sky;
 using DimDream.Content.Items.Accessories;
+using Terraria.Localization;
 
 namespace DimDream.Content.NPCs
 {
@@ -113,7 +114,7 @@ namespace DimDream.Content.NPCs
             NPC.height = 78;
             NPC.damage = 23;
             NPC.defense = 22;
-            NPC.lifeMax = GetRawHealth(2000, 1500, 1300);
+            NPC.lifeMax = BossCommon.GetRawHealth(2000, 1500, 1300);
             NPC.HitSound = SoundID.NPCHit1;
             NPC.DeathSound = SoundID.NPCDeath1;
             NPC.knockBackResist = 0f;
@@ -184,7 +185,7 @@ namespace DimDream.Content.NPCs
                 StageHelper = 10;
                 NPC.life = 1;
                 NPC.dontTakeDamage = true;
-                NPC.lifeMax = GetRawHealth(12000, 9000, 7500);
+                NPC.lifeMax = BossCommon.GetRawHealth(9000, 12000, 15000);
                 return false;
             }
 
@@ -196,8 +197,9 @@ namespace DimDream.Content.NPCs
             if (StageHelper == 12 && !NPC.dontTakeDamage)
             {
                 int timeFactor = !ShouldMoveSpellName ? 999 : Counter + 100;
+                string spellName = Language.GetTextValue("Mods.DimDream.NPCs.OrinBossCat.Spells.CatsWalk");
                 DrawNPC(spriteBatch, timeFactor);
-                DrawSpellName(spriteBatch, "Cat Sign \"Cat's Walk\"", timeFactor);
+                DrawSpellName(spriteBatch, spellName, timeFactor);
             }
 
 
@@ -340,19 +342,6 @@ namespace DimDream.Content.NPCs
                     NPC.frame.Y = 0;
                 }
             }
-        }
-
-        // Return health before changes from difficulty. For example, if classic should have 2000 health and expert should have 3000,
-        // then this should use 2000 for classic and 1500 for expert, since the game automatically doubles health in expert.
-        public int GetRawHealth(int classic, int expert, int master)
-        {
-            if (Main.masterMode)
-                return master;
-
-            if (Main.expertMode)
-                return expert;
-
-            return classic;
         }
 
         public void PrePatternDust(int distance)
